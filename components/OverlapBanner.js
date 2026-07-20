@@ -15,18 +15,18 @@ export default function OverlapBanner({ group, profilesById, onMerge }) {
       </div>
       <div className="flex-1 min-w-[200px]">
         <div className="font-display font-semibold text-sm text-ink">
-          Überschneidung erkannt
+          Overlap detected
         </div>
         <div className="font-body text-[13px] text-inksoft">
-          {authorIds.map((id) => profilesById[id]?.name).join(" & ")} haben beide Lust
-          auf <b>{group[0].category}</b> · {group[0].timeframe}. Zusammenlegen?
+          {authorIds.map((id) => profilesById[id]?.name).join(" & ")} both are in the mood
+          for <b>{group[0].category}</b> · {group[0].timeframe}. Merge?
         </div>
       </div>
       <button
         onClick={() => onMerge(group)}
         className="font-display font-semibold text-[13px] px-4 py-1.5 rounded-full bg-indigo text-white"
       >
-        Zusammenlegen
+        Merge
       </button>
     </div>
   );

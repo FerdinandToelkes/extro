@@ -26,19 +26,19 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm bg-white border border-border rounded-2xl p-8">
-        <h1 className="font-display font-bold text-2xl mb-1">Aktivitäten-Feed</h1>
+        <h1 className="font-display font-bold text-2xl mb-1">Extro: Activities Feed</h1>
         <p className="text-inksoft text-sm mb-6 font-body">
-          Melde dich mit deiner E-Mail an – du bekommst einen Login-Link, kein Passwort nötig.
+          Sign up with your email address—you'll receive a login link; no password is required.
         </p>
         {sent ? (
           <p className="font-body text-sm text-sage">
-            Link verschickt! Schau in dein Postfach ({email}) und klick auf den Link.
+            Link sent! Check your inbox ({email}) and click the link.
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <input
               type="text"
-              placeholder="Dein Name"
+              placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
@@ -46,7 +46,7 @@ export default function LoginPage() {
             <input
               type="email"
               required
-              placeholder="deine@email.de"
+              placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
@@ -55,7 +55,7 @@ export default function LoginPage() {
               type="submit"
               className="bg-ink text-white font-display font-semibold rounded-full px-4 py-2 text-sm mt-2"
             >
-              Login-Link senden
+              Send Login Link
             </button>
             {error && <p className="text-coral text-xs font-body">{error}</p>}
           </form>

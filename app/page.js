@@ -133,7 +133,7 @@ export default function FeedPage() {
     const peopleIds = [...new Set(group.flatMap((a) => a.visiblePeopleIds))];
     await createActivity({
       authorId: me.id,
-      text: `${group[0].text} (zusammengelegt: ${authorNames.join(", ")})`,
+      text: `${group[0].text} (merged: ${authorNames.join(", ")})`,
       category: group[0].category,
       timeframe: group[0].timeframe,
       circleIds,
@@ -151,7 +151,7 @@ export default function FeedPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg font-body text-inksoft">
-        Lädt…
+        Loading…
       </div>
     );
   }
@@ -162,17 +162,17 @@ export default function FeedPage() {
         <div className="flex justify-between items-start mb-5">
           <div>
             <div className="font-mono text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-              {visibleActivities.length} offene Aktivitäten in deinem Kreis
+              {visibleActivities.length} open activities in your circles
             </div>
             <h1 className="font-display font-bold text-[28px] text-ink m-0">
-              Wonach steht dir der Sinn?
+              What are you in the mood for?
             </h1>
           </div>
           <button
             onClick={handleLogout}
             className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
           >
-            Abmelden
+            Sign Out
           </button>
         </div>
 
@@ -189,7 +189,7 @@ export default function FeedPage() {
             href="/circles"
             className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
           >
-            + Kreis verwalten
+            + Manage Circles
           </a>
         </div>
 
@@ -206,7 +206,7 @@ export default function FeedPage() {
             onClick={() => setShowForm(true)}
             className="w-full text-left font-body text-[14.5px] text-gray-400 bg-white border border-dashed border-gray-300 rounded-2xl px-4.5 py-3.5 mb-5"
           >
-            + Ich hätte mal wieder Lust auf …
+            + Create New Activity
           </button>
         )}
 

@@ -1,92 +1,115 @@
-# Aktivitäten-Feed
+# Activities Feed
 
-Web-App zum Teilen mit deinem Freundeskreis. Läuft komplett im Browser über einen
-Link — niemand muss etwas installieren.
+Web app for sharing with your friend circle. Runs entirely in the browser via a
+link — nobody has to install anything.
 
-**Stack:** Next.js (React, generiert die Web-Oberfläche) + Supabase (Postgres-
-Datenbank + Login + Echtzeit-Updates, kostenlos für diese Größenordnung) +
-Vercel (Hosting, kostenlos, gibt dir einen echten Link).
+**Stack:** Next.js (React, generates the web interface) + Supabase (Postgres
+database + login + realtime updates, free at this scale) + Vercel (hosting,
+free, gives you a real link).
 
-Warum dieser Stack: Er ist Web-Standard, braucht keinen eigenen Server, den du
-verwalten musst, und beide Dienste (Supabase, Vercel) haben ein Web-Interface,
-in dem du fast alles per Klick statt per Kommandozeile machst. Das passt gut
-dazu, dass du eher aus Python/C++/Julia kommst — die eigentliche App-Logik in
-diesem Repo ist bereits geschrieben; du musst v.a. Klicks in zwei Web-Oberflächen
-machen und Umgebungsvariablen einfügen.
+Why this stack: it's web-standard, needs no server of your own to manage, and
+both services (Supabase, Vercel) have a web interface where you do almost
+everything by clicking instead of on the command line. That fits well with you
+coming more from Python/C++/Julia — the actual app logic in this repo is
+already written; you mainly need to click through two web interfaces and paste
+in environment variables.
 
-## 1. Supabase-Projekt anlegen (Datenbank + Login)
+## 1. Create a Supabase project (database + login)
 
-1. Auf https://supabase.com kostenlos registrieren, "New Project" klicken.
-2. Warten bis das Projekt bereit ist (~2 Min).
-3. Links im Menü auf **SQL Editor** → **New query** → Inhalt von
-   `sql/schema.sql` reinkopieren → **Run**. Das legt alle Tabellen, den
-   Auto-Profil-Trigger und die Zugriffsregeln an.
-4. Links im Menü auf **Project Settings → API**. Dort findest du:
-   - **Project URL** → kommt in `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon public key** → kommt in `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-5. Login läuft per Magic-Link (E-Mail) — das ist bei Supabase standardmäßig an,
-   du musst nichts umstellen.
+1. Sign up for free at https://supabase.com, click "New Project".
+2. Wait until the project is ready (~2 min).
+3. In the left menu go to **SQL Editor** → **New query** → paste in the
+   contents of `sql/schema.sql` → **Run**. This creates all tables, the
+   auto-profile trigger, and the access rules.
+4. In the left menu go to **Project Settings → API**. There you'll find:
+   - **Project URL** → goes into `NEXT_PUBLIC_SUPABASE_URL`
+   - **anon public key** (or, on newer projects, the **publishable key**,
+     starting with `sb_publishable_...`) → goes into
+     `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-## 2. Lokal testen (optional, aber empfohlen bevor du live gehst)
+   ⚠️ **Use the plain Project URL** (`https://xxxxxxxx.supabase.co`), *not*
+   the REST/data API URL some pages show with `/rest/v1/` appended. The
+   Supabase client adds its own paths, so a URL that already ends in
+   `/rest/v1/` breaks every request the app makes — including login. This is
+   the single most common reason login silently fails.
+5. Login runs via magic link (email) — that's on by default in Supabase, you
+   don't need to change anything.
+
+## 2. Test locally (optional, but recommended before going live)
 
 ```bash
-# Node.js falls nötig installieren (einmalig)
+# Install Node.js if needed (one-time)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 nvm install --lts
 
-cd aktivitaeten-feed
+cd extro
 cp .env.local.example .env.local
-# .env.local öffnen und die zwei Werte aus Schritt 1.4 eintragen
+# open .env.local and fill in the two values from step 1.4
 
 npm install
 npm run dev
 ```
 
-Dann im Browser `http://localhost:3000` öffnen, mit deiner eigenen E-Mail
-einloggen (Magic-Link landet im Postfach) und ausprobieren.
+Then open `http://localhost:3000` in your browser, log in with your own email
+(the magic link lands in your inbox), and try it out.
 
-## 3. Auf GitHub pushen
+## 3. Push to GitHub
 
 ```bash
 git init
 git add .
 git commit -m "Initial commit"
-gh repo create aktivitaeten-feed --private --source=. --push
-# falls du die GitHub-CLI (gh) nicht hast, alternativ ganz normal über
-# github.com ein leeres Repo anlegen und die dort angezeigten git-Befehle nutzen
+gh repo create extro --private --source=. --push
+# if you don't have the GitHub CLI (gh), you can instead create an empty repo
+# the normal way on github.com and use the git commands shown there
 ```
 
-## 4. Auf Vercel deployen (→ echter Link)
+## 4. Deploy to Vercel (→ real link)
 
-1. Auf https://vercel.com mit deinem GitHub-Account einloggen.
-2. **Add New → Project** → dein `aktivitaeten-feed`-Repo auswählen.
-3. Bei **Environment Variables** die gleichen zwei Werte wie in `.env.local`
-   eintragen (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
-4. **Deploy** klicken. Nach ~1 Minute bekommst du einen Link wie
-   `https://aktivitaeten-feed-xyz.vercel.app`.
-5. Diesen Link kannst du direkt an Freunde schicken. Jeder meldet sich mit
-   eigener E-Mail an und landet im gleichen Feed.
+1. Log in to https://vercel.com with your GitHub account.
+2. **Add New → Project** → select your `extro` repo.
+3. Under **Environment Variables**, enter the same two values as in
+   `.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+4. Click **Deploy**. After ~1 minute you'll get a link like
+   `https://extro-xyz.vercel.app`.
+5. You can send that link directly to friends. Everyone signs up with their
+   own email and lands in the same feed.
 
-Jede Änderung, die du später committest und pushst, wird automatisch neu
-deployed — kein erneutes manuelles Hochladen nötig.
+Every change you commit and push later gets redeployed automatically — no
+manual re-upload needed.
 
-## Was für den Test unter Freunden bewusst einfach gehalten ist
+## What's intentionally kept simple for testing among friends
 
-- **Zugriffsrechte (RLS):** Aktuell dürfen alle angemeldeten Nutzer alle
-  Datensätze lesen (Schreiben nur für eigene Einträge). Das reicht für einen
-  vertrauten Freundeskreis zum Testen, sollte aber verschärft werden, bevor
-  ein größerer/fremder Kreis Zugriff bekommt.
-- **"Zusammenlegen" bei Überschneidungen** legt aktuell eine neue,
-  zusammengeführte Aktivität an, statt die ursprünglichen zwei technisch zu
-  verschmelzen. Funktional passt das fürs Ausprobieren, ist aber ein Punkt,
-  den wir später sauberer lösen können.
-- **Freundeskreise** bestehen nur aus Leuten, die sich schon mal angemeldet
-  haben (kein Adressbuch-Import). Für den ersten Testlauf im Freundeskreis
-  reicht das.
+- **Access rights (RLS):** Currently all signed-in users may read all
+  records (writing only to their own entries). That's fine for a trusted
+  friend circle for testing, but should be tightened before a larger or
+  less-trusted group gets access.
+- **"Merge" on overlaps** currently creates a new, combined activity instead
+  of technically merging the original two. That's functionally fine for
+  trying it out, but it's a point we can clean up later.
+- **Friend circles** only consist of people who have already signed up (no
+  address-book import). That's enough for the first test run among friends.
 
-## Weiterentwickeln
+## About the `npm install` warnings
 
-Sag mir einfach, was du basierend auf dem Feedback deiner Freunde ändern
-willst — ich schreibe dir dann den passenden Code, und du musst nur noch
-`git add . && git commit -m "..." && git push` ausführen, den Rest übernimmt
-Vercel automatisch.
+- `npm audit`: the moderate PostCSS advisory comes from a copy of `postcss`
+  bundled *inside* `next`'s own dependencies, not a package this app uses
+  directly. `npm audit fix --force` would downgrade Next.js to a very old
+  canary release to "fix" it — don't run that; it would break the app. This
+  advisory is about Next's internal build tooling, not something reachable
+  through this app's code, so it's safe to ignore until Next.js ships an
+  update with a newer bundled postcss.
+- `npm warn allow-scripts`: this comes from your npm/pnpm install-scripts
+  allowlist config (likely global, from another project) asking you to
+  approve install scripts for `fsevents` (macOS file watching, used by
+  Next.js dev mode) and `sharp` (image processing). Both are legitimate,
+  widely used packages. If the warning bothers you, run
+  `npm approve-scripts --allow-scripts-pending` and approve both; otherwise
+  it's safe to ignore.
+
+## Continuing development
+
+Just tell me what you want to change based on feedback from your friends —
+I'll write the matching code, and all you need to do afterward is run
+`git add . && git commit -m "..." && git push`; Vercel takes care of the rest
+automatically.

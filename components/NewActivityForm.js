@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-const TIMEFRAMES = ["Heute", "Morgen", "Wochenende"];
-const CATEGORIES = ["Sport", "Café", "Kultur", "Freizeit", "Essen"];
+const TIMEFRAMES = ["Today", "Tomorrow", "Weekend"];
+const CATEGORIES = ["Sport", "Café", "Culture", "Leisure", "Food", "Other"];
 
 export default function NewActivityForm({ circles, profiles, meId, onCreate, onClose }) {
   const [text, setText] = useState("");
@@ -44,18 +44,18 @@ export default function NewActivityForm({ circles, profiles, meId, onCreate, onC
   return (
     <div className="bg-white border border-border rounded-2xl p-5 mb-5">
       <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-        Worauf hast du Lust?
+        What are you in the mood for?
       </label>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="z. B. Ich hätte Lust auf einen Spaziergang…"
+        placeholder="e.g., I'm in the mood for a walk…"
         rows={2}
         className="w-full resize-none border border-border rounded-lg px-3 py-2.5 font-body text-[15px] mb-4 outline-none"
       />
 
       <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-        Wann
+        When
       </label>
       <div className="flex gap-2 mb-4 flex-wrap">
         {TIMEFRAMES.map((tf) => (
@@ -66,7 +66,7 @@ export default function NewActivityForm({ circles, profiles, meId, onCreate, onC
       </div>
 
       <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-        Kategorie
+        Category
       </label>
       <div className="flex gap-2 mb-4 flex-wrap">
         {CATEGORIES.map((c) => (
@@ -77,21 +77,21 @@ export default function NewActivityForm({ circles, profiles, meId, onCreate, onC
       </div>
 
       <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-        Sichtbar für
+        Visible to
       </label>
       <div className="flex gap-2 mb-2.5">
         <button className={chip(visType === "circle")} onClick={() => setVisType("circle")}>
-          Freundeskreise
+          Friend Circles
         </button>
         <button className={chip(visType === "people")} onClick={() => setVisType("people")}>
-          Einzelne Personen
+          Individual People
         </button>
       </div>
       {visType === "circle" ? (
         <div className="flex gap-2 mb-4 flex-wrap">
           {circles.length === 0 && (
             <span className="text-[13px] text-gray-400 font-body">
-              Noch keine Freundeskreise – lege zuerst einen unter „Kreise" an.
+              No friend circles yet – create one under "Circles".
             </span>
           )}
           {circles.map((c) => (
@@ -124,13 +124,13 @@ export default function NewActivityForm({ circles, profiles, meId, onCreate, onC
           disabled={submitting}
           className="font-display font-semibold text-sm px-5 py-2 rounded-full bg-ink text-white disabled:opacity-50"
         >
-          {submitting ? "…" : "Veröffentlichen"}
+          {submitting ? "…" : "Publish"}
         </button>
         <button
           onClick={onClose}
           className="font-display font-semibold text-sm px-5 py-2 rounded-full border border-border bg-white text-inksoft"
         >
-          Abbrechen
+          Cancel
         </button>
       </div>
     </div>

@@ -4,9 +4,9 @@ import { useState } from "react";
 import Avatar from "./Avatar";
 
 const TIMEFRAME_COLOR = {
-  Heute: "#FF7A59",
-  Morgen: "#E8A33D",
-  Wochenende: "#4B4ECF",
+  Today: "#FF7A59",
+  Tomorrow: "#E8A33D",
+  Weekend: "#4B4ECF",
 };
 
 export default function ActivityCard({
@@ -25,18 +25,18 @@ export default function ActivityCard({
   const author = profilesById[activity.authorId];
 
   const visibilityLabel = activity.visibleCircleIds.length
-    ? "Sichtbar für: " +
+    ? "Visible to: " +
       activity.visibleCircleIds
         .map((id) => circlesById[id]?.name)
         .filter(Boolean)
         .join(", ")
     : activity.visiblePeopleIds.length
-    ? "Sichtbar für: " +
+    ? "Visible to: " +
       activity.visiblePeopleIds
         .map((id) => profilesById[id]?.name)
         .filter(Boolean)
         .join(", ")
-    : "Nur für dich sichtbar";
+    : "Visible only to you";
 
   return (
     <div className="relative bg-white border border-border rounded-2xl rounded-tr-none rounded-bl-sm p-5 pb-4 mb-3.5 overflow-hidden">
@@ -85,7 +85,7 @@ export default function ActivityCard({
               )}
             </div>
             <span className="font-mono text-xs text-inksoft">
-              {activity.joined.length} dabei
+              {activity.joined.length} joined
             </span>
 
             <button
@@ -94,7 +94,7 @@ export default function ActivityCard({
                 hasJoined ? "bg-gray-100 text-inksoft" : "bg-indigo text-white"
               }`}
             >
-              {hasJoined ? "Zugesagt ✓" : "Ich bin dabei"}
+              {hasJoined ? "Joined ✓" : "I'm in"}
             </button>
 
             {chatActive && (
@@ -111,12 +111,12 @@ export default function ActivityCard({
           {chatActive && chatOpen && (
             <div className="mt-3.5 border-t border-dashed border-border pt-3">
               <div className="font-mono text-[10.5px] text-sage uppercase tracking-wide mb-2">
-                Temporärer Gruppenchat · schließt sich nach dem Treffen
+                Temporary chat for this activity (clears after the activity ends)
               </div>
               <div className="flex flex-col gap-1.5 mb-2.5 max-h-40 overflow-y-auto">
                 {activity.chat.length === 0 && (
                   <div className="text-[13px] text-gray-400 italic">
-                    Noch keine Nachrichten.
+                    No messages yet — say hi!
                   </div>
                 )}
                 {activity.chat.map((m) => (
@@ -136,7 +136,7 @@ export default function ActivityCard({
                       setDraft("");
                     }
                   }}
-                  placeholder="Nachricht schreiben…"
+                  placeholder="Write a message…"
                   className="flex-1 px-3 py-2 rounded-full border border-border font-body text-[13.5px] outline-none"
                 />
                 <button
@@ -148,7 +148,7 @@ export default function ActivityCard({
                   }}
                   className="px-3.5 py-2 rounded-full bg-ink text-white font-display font-semibold text-[13px]"
                 >
-                  Senden
+                  Send
                 </button>
               </div>
             </div>

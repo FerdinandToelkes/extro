@@ -1,17 +1,17 @@
--- Aktivitäten-Feed — Datenbankschema für Supabase
--- Einfach 1:1 in den Supabase SQL-Editor kopieren und ausführen.
+-- Extro: Activities feed — Database schema for Supabase
+-- Copy this into the SQL editor in Supabase to create the database schema.
 
 create extension if not exists "pgcrypto";
 
--- Profile (ein Eintrag pro registriertem Nutzer)
+-- Profile (one row per registered user)
 create table profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  name text not null default 'Unbekannt',
+  name text not null default 'Unknown',
   avatar_initials text,
   created_at timestamptz default now()
 );
 
--- Freundeskreise
+-- Friend Circles
 create table circles (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid references profiles(id) on delete cascade,
@@ -25,7 +25,7 @@ create table circle_members (
   primary key (circle_id, member_id)
 );
 
--- Aktivitäten
+-- Activities
 create table activities (
   id uuid primary key default gen_random_uuid(),
   author_id uuid references profiles(id) on delete cascade,
@@ -62,7 +62,7 @@ create table activity_messages (
   created_at timestamptz default now()
 );
 
--- Profil automatisch anlegen, wenn sich jemand neu registriert (Magic-Link-Login)
+-- Create profile automatically when someone registers (Magic-Link-Login)
 create function public.handle_new_user()
 returns trigger as $$
 begin
@@ -80,7 +80,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Realtime für Live-Updates aktivieren
+-- Enable realtime for live updates
 alter publication supabase_realtime add table activities, activity_joins, activity_messages;
 
 -- Row Level Security
@@ -93,10 +93,10 @@ alter table activity_visibility_people enable row level security;
 alter table activity_joins enable row level security;
 alter table activity_messages enable row level security;
 
--- MVP-Policy: Alle angemeldeten Nutzer (also nur deine eingeladenen Freunde,
--- da sich nur anmelden kann, wer den Link + Zugang zur E-Mail hat) dürfen
--- alles lesen, aber nur eigene Einträge anlegen/ändern/löschen.
--- Für einen späteren, breiteren Rollout sollte das verfeinert werden.
+-- MVP Policy: All registered users (i.e., only your invited friends,
+-- since only those who have the link and access to the email can sign up) may
+-- read everything, but can only create, edit, or delete their own posts.
+-- This should be refined for a later, broader rollout.
 
 create policy "profiles: select all" on profiles for select to authenticated using (true);
 create policy "profiles: update own" on profiles for update to authenticated using (auth.uid() = id);

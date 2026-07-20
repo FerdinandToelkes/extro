@@ -51,24 +51,24 @@ export default function CirclesPage() {
     <div className="min-h-screen bg-bg font-body">
       <div className="max-w-[620px] mx-auto px-4 pt-7 pb-16">
         <a href="/" className="font-mono text-[11px] text-indigo">
-          ← Zurück zum Feed
+          ← Back to Feed
         </a>
         <h1 className="font-display font-bold text-2xl text-ink mt-2 mb-5">
-          Freundeskreise
+          Friends & Groups
         </h1>
 
         <div className="bg-white border border-border rounded-2xl p-5 mb-6">
           <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-            Neuer Kreis
+            New Circle
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="z. B. Sport"
+            placeholder="e.g., Sports"
             className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm mb-3 outline-none"
           />
           <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-            Mitglieder ({profiles.filter((p) => p.id !== me.id).length} verfügbar)
+            Members ({profiles.filter((p) => p.id !== me.id).length} available)
           </label>
           <div className="flex gap-2 flex-wrap mb-4">
             {profiles
@@ -88,7 +88,7 @@ export default function CirclesPage() {
               ))}
             {profiles.length <= 1 && (
               <span className="text-[13px] text-gray-400">
-                Noch niemand sonst angemeldet — teile den App-Link mit Freunden.
+                No one else is signed up — share the app link with friends.
               </span>
             )}
           </div>
@@ -96,7 +96,7 @@ export default function CirclesPage() {
             onClick={submit}
             className="font-display font-semibold text-sm px-5 py-2 rounded-full bg-ink text-white"
           >
-            Kreis erstellen
+            Create Circle
           </button>
         </div>
 
@@ -108,7 +108,7 @@ export default function CirclesPage() {
             >
               <span className="font-display font-semibold text-ink">{c.name}</span>
               <span className="font-mono text-xs text-inksoft">
-                {c.memberIds.length} Mitglieder
+                {c.memberIds.length} Members
               </span>
             </div>
           ))}
