@@ -4,13 +4,19 @@
 -- was already dropped/renamed (that's fine -- it means it's already applied).
 --
 -- Previously "activities: select all" (and the matching policy on
--- activity_messages/activity_joins/activity_visibility_circles/
--- activity_visibility_people) used `using (true)`, so any signed-in user
--- could read every activity -- including its chat and who'd responded --
--- directly via the Supabase API, regardless of circle/individual
--- visibility. This replaces those with policies that mirror the
+-- activity_messages/activity_joins) used `using (true)`, so any signed-in
+-- user could read every activity -- including its chat and who'd
+-- responded -- directly via the Supabase API, regardless of circle/
+-- individual visibility. This replaces those with policies that mirror the
 -- isVisibleToMe() check already used in the app (app/page.js), enforced
 -- here so it can't be bypassed by calling the API directly.
+--
+-- Note: activity_visibility_circles/activity_visibility_people stay
+-- `select all` -- the policy below checks those two tables to decide
+-- whether an activity is visible, so gating their own select the same way
+-- would make Postgres reject the whole thing with "infinite recursion
+-- detected in policy" (found the hard way -- see
+-- sql/migration_fix_visibility_recursion.sql if you already hit that).
 
 drop policy "activities: select all" on activities;
 create policy "activities: select visible" on activities for select to authenticated using (
@@ -24,16 +30,6 @@ create policy "activities: select visible" on activities for select to authentic
     join circle_members cm on cm.circle_id = vc.circle_id
     where vc.activity_id = activities.id and cm.member_id = auth.uid()
   )
-);
-
-drop policy "vis_circles: select all" on activity_visibility_circles;
-create policy "vis_circles: select visible activity" on activity_visibility_circles for select to authenticated using (
-  exists (select 1 from activities a where a.id = activity_visibility_circles.activity_id)
-);
-
-drop policy "vis_people: select all" on activity_visibility_people;
-create policy "vis_people: select visible activity" on activity_visibility_people for select to authenticated using (
-  exists (select 1 from activities a where a.id = activity_visibility_people.activity_id)
 );
 
 drop policy "joins: select all" on activity_joins;

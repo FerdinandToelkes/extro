@@ -250,12 +250,15 @@ create policy "activities: insert own" on activities for insert to authenticated
 create policy "activities: update own" on activities for update to authenticated using (auth.uid() = author_id) with check (auth.uid() = author_id);
 create policy "activities: delete own" on activities for delete to authenticated using (auth.uid() = author_id);
 
--- The four tables below just defer to "activities: select visible" above --
--- the inner select is itself subject to that policy, so a row only exists
--- here if the underlying activity is visible to the current user.
-create policy "vis_circles: select visible activity" on activity_visibility_circles for select to authenticated using (
-  exists (select 1 from activities a where a.id = activity_visibility_circles.activity_id)
-);
+-- select stays open on these two: "activities: select visible" itself
+-- checks these tables to decide if an activity is visible, so gating
+-- their select the same way would create a circular RLS dependency
+-- (Postgres errors with "infinite recursion detected in policy"). Reading
+-- a bare activity_id/circle_id or activity_id/person_id pairing here,
+-- without being able to read the corresponding activity's actual content
+-- (which activities' own policy above already locks down), is a much
+-- smaller leak than the original activities: select all was.
+create policy "vis_circles: select all" on activity_visibility_circles for select to authenticated using (true);
 create policy "vis_circles: insert own activity" on activity_visibility_circles for insert to authenticated with check (
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );
@@ -263,9 +266,7 @@ create policy "vis_circles: delete own activity" on activity_visibility_circles 
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );
 
-create policy "vis_people: select visible activity" on activity_visibility_people for select to authenticated using (
-  exists (select 1 from activities a where a.id = activity_visibility_people.activity_id)
-);
+create policy "vis_people: select all" on activity_visibility_people for select to authenticated using (true);
 create policy "vis_people: insert own activity" on activity_visibility_people for insert to authenticated with check (
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );

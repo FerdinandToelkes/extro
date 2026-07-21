@@ -65,10 +65,18 @@ in environment variables.
      (circles/individual people) at the database level, not just in the
      browser. No app behavior changes; this only matters if someone calls
      the Supabase API directly instead of using the app.
+   - `sql/migration_fix_visibility_recursion.sql` — **only needed if you
+     already ran `migration_visibility_rls.sql` before 2026-07-21 and are
+     now stuck on a loading screen**, or seeing "infinite recursion
+     detected in policy for relation activities." An earlier version of
+     that migration had a circular policy bug; this fixes it. If you're
+     running the migrations fresh/in order, `migration_visibility_rls.sql`
+     is already correct and you can skip this one.
 
-   On a brand-new project you can skip all six — the full `schema.sql`
-   already includes those changes (`schema.sql` itself also enables
-   `pg_cron` the same way, so the note above applies there too).
+   On a brand-new project you can skip all six (the seventh is a hotfix,
+   not needed at all on a fresh project) — the full `schema.sql` already
+   includes the correct version of those changes (`schema.sql` itself also
+   enables `pg_cron` the same way, so the note above applies there too).
 
 ## 2. Test locally (optional, but recommended before going live)
 
