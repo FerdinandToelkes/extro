@@ -86,12 +86,6 @@ export default function ViewProfilePage() {
             )}
             {profile.bio && <p className="font-body text-sm text-inksoft mt-2">{profile.bio}</p>}
 
-            {profile.available_until && new Date(profile.available_until) > new Date() && (
-              <div className="font-body text-[13px] text-sage mt-2">
-                🟢 Free: {profile.available_day} · {profile.available_time_of_day}
-              </div>
-            )}
-
             <div className="mt-4">
               {!rel && (
                 <button

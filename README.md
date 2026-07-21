@@ -88,13 +88,21 @@ in environment variables.
      Friend-adding is now exact-username search only — the Friends page no
      longer lists everyone. Also adds the function behind "see a friend's
      friends" on their profile page.
-   - `sql/migration_availability.sql` — adds "I'm generally free" status
-     sharing (visible to your friends, shown on the feed and on profiles).
+   - `sql/migration_availability.sql` — **superseded, skip this one** —
+     see `migration_availability_slots.sql` below instead, even if you
+     already ran this.
    - `sql/migration_subscribed_tags.sql` — adds tag subscriptions
      ("recurring interests"), set on your Profile page. Matching activities
      get a badge and sort to the top of your feed.
+   - `sql/migration_availability_slots.sql` — replaces the single-status
+     availability bar with a weekly calendar (up to one slot per day,
+     each shareable with specific circles or people) on a new `/calendar`
+     page. Also adds circle membership management (add/remove people from
+     an existing circle, not just at creation) — `circle_members` had no
+     delete policy at all until this migration, so removal genuinely
+     wasn't possible before, not just missing from the UI.
 
-   On a brand-new project you can skip all twelve (the sixth is a hotfix,
+   On a brand-new project you can skip all thirteen (the sixth is a hotfix,
    not needed at all on a fresh project) — the full `schema.sql` already
    includes the correct version of those changes (`schema.sql` itself also
    enables `pg_cron` the same way, so the note above applies there too).

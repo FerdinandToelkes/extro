@@ -16,13 +16,6 @@ create table profiles (
   -- way to find someone to friend (no directory browsing). NULL is allowed
   -- for accounts that predate this column.
   username text unique check (username ~ '^[a-z0-9_]{3,20}$'),
-  -- Current "I'm generally free" status (a single status, not a log --
-  -- setting a new one replaces the old). available_until is checked
-  -- client-side to decide whether it's still active; no cron needed since
-  -- there's no row to delete, just a stale value that stops being shown.
-  available_day text,
-  available_time_of_day text,
-  available_until timestamptz,
   -- Tags (same vocabulary as activities.tags) this person wants surfaced
   -- and highlighted on their feed -- a "recurring interest" subscription.
   subscribed_tags text[] not null default '{}',
@@ -106,6 +99,31 @@ create table activity_messages (
   author_id uuid references profiles(id) on delete cascade,
   text text not null,
   created_at timestamptz default now()
+);
+
+-- Weekly "I'm generally free" availability -- one slot per day of the
+-- week (the unique constraint below structurally caps it at 7), each
+-- independently shareable with circles or individual people, exactly
+-- like activities.
+create table availability_slots (
+  id uuid primary key default gen_random_uuid(),
+  person_id uuid references profiles(id) on delete cascade,
+  day_of_week text not null check (day_of_week in ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')),
+  time_of_day text not null check (time_of_day in ('Morning','Afternoon','Evening','Anytime')),
+  created_at timestamptz default now(),
+  unique (person_id, day_of_week)
+);
+
+create table availability_visibility_circles (
+  slot_id uuid references availability_slots(id) on delete cascade,
+  circle_id uuid references circles(id) on delete cascade,
+  primary key (slot_id, circle_id)
+);
+
+create table availability_visibility_people (
+  slot_id uuid references availability_slots(id) on delete cascade,
+  person_id uuid references profiles(id) on delete cascade,
+  primary key (slot_id, person_id)
 );
 
 -- Create profile automatically when someone registers (Magic-Link-Login)
@@ -300,6 +318,9 @@ alter table activity_visibility_circles enable row level security;
 alter table activity_visibility_people enable row level security;
 alter table activity_joins enable row level security;
 alter table activity_messages enable row level security;
+alter table availability_slots enable row level security;
+alter table availability_visibility_circles enable row level security;
+alter table availability_visibility_people enable row level security;
 
 -- MVP Policy: All registered users (i.e., only your invited friends,
 -- since only those who have the link and access to the email can sign up) may
@@ -315,6 +336,12 @@ create policy "circles: insert own" on circles for insert to authenticated with 
 create policy "circle_members: select all" on circle_members for select to authenticated using (true);
 create policy "circle_members: insert own circle" on circle_members for insert to authenticated with check (
   exists (select 1 from circles c where c.id = circle_id and c.owner_id = auth.uid())
+);
+create policy "circle_members: delete by owner" on circle_members for delete to authenticated using (
+  exists (select 1 from circles c where c.id = circle_id and c.owner_id = auth.uid())
+);
+create policy "circle_members: leave own membership" on circle_members for delete to authenticated using (
+  auth.uid() = member_id
 );
 
 create policy "friend_requests: select own" on friend_requests for select to authenticated using (
@@ -386,6 +413,42 @@ create policy "messages: select visible activity" on activity_messages for selec
   exists (select 1 from activities a where a.id = activity_messages.activity_id)
 );
 create policy "messages: insert own" on activity_messages for insert to authenticated with check (auth.uid() = author_id);
+
+-- Mirrors the activities visibility pattern exactly, including keeping
+-- the two "vis_*" child tables open (select all) rather than checking
+-- back into availability_slots -- gating both directions is exactly what
+-- caused "infinite recursion detected in policy" for activities earlier.
+create policy "availability_slots: select visible" on availability_slots for select to authenticated using (
+  person_id = auth.uid()
+  or exists (
+    select 1 from availability_visibility_people vp
+    where vp.slot_id = availability_slots.id and vp.person_id = auth.uid()
+  )
+  or exists (
+    select 1 from availability_visibility_circles vc
+    join circle_members cm on cm.circle_id = vc.circle_id
+    where vc.slot_id = availability_slots.id and cm.member_id = auth.uid()
+  )
+);
+create policy "availability_slots: insert own" on availability_slots for insert to authenticated with check (auth.uid() = person_id);
+create policy "availability_slots: update own" on availability_slots for update to authenticated using (auth.uid() = person_id) with check (auth.uid() = person_id);
+create policy "availability_slots: delete own" on availability_slots for delete to authenticated using (auth.uid() = person_id);
+
+create policy "avail_vis_circles: select all" on availability_visibility_circles for select to authenticated using (true);
+create policy "avail_vis_circles: insert own slot" on availability_visibility_circles for insert to authenticated with check (
+  exists (select 1 from availability_slots s where s.id = slot_id and s.person_id = auth.uid())
+);
+create policy "avail_vis_circles: delete own slot" on availability_visibility_circles for delete to authenticated using (
+  exists (select 1 from availability_slots s where s.id = slot_id and s.person_id = auth.uid())
+);
+
+create policy "avail_vis_people: select all" on availability_visibility_people for select to authenticated using (true);
+create policy "avail_vis_people: insert own slot" on availability_visibility_people for insert to authenticated with check (
+  exists (select 1 from availability_slots s where s.id = slot_id and s.person_id = auth.uid())
+);
+create policy "avail_vis_people: delete own slot" on availability_visibility_people for delete to authenticated using (
+  exists (select 1 from availability_slots s where s.id = slot_id and s.person_id = auth.uid())
+);
 
 -- Self-expiring activities: an hourly job permanently deletes activities
 -- past their expiry (joins/messages/visibility rows cascade automatically).
