@@ -34,11 +34,16 @@ in environment variables.
    the single most common reason login silently fails.
 5. Login runs via magic link (email) — that's on by default in Supabase, you
    don't need to change anything.
-6. **If you already ran an earlier version of `schema.sql`**, also run
-   `sql/migration_edit_delete_location.sql` once (same SQL editor). It adds the
-   optional `location` column and the policies that let authors edit/delete
-   their own activities. On a brand-new project you can skip this — the full
-   `schema.sql` already includes those changes.
+6. **If you already ran an earlier version of `schema.sql`**, also run, in
+   this order (same SQL editor):
+   - `sql/migration_edit_delete_location.sql` — adds the optional `location`
+     column and the policies that let authors edit/delete their own
+     activities.
+   - `sql/migration_bugfixes.sql` — tightens a couple of overly-permissive
+     access rules (see below) and fixes an avatar-initials edge case.
+
+   On a brand-new project you can skip both — the full `schema.sql` already
+   includes those changes.
 
 ## 2. Test locally (optional, but recommended before going live)
 
@@ -115,9 +120,10 @@ manual re-upload needed.
 - `npm warn allow-scripts`: this comes from your npm/pnpm install-scripts
   allowlist config (likely global, from another project) asking you to
   approve install scripts for `fsevents` (macOS file watching, used by
-  Next.js dev mode) and `sharp` (image processing). Both are legitimate,
+  Next.js dev mode), `sharp` (image processing), and `unrs-resolver` (a
+  native module resolver used by the linter). All three are legitimate,
   widely used packages. If the warning bothers you, run
-  `npm approve-scripts --allow-scripts-pending` and approve both; otherwise
+  `npm approve-scripts --allow-scripts-pending` and approve them; otherwise
   it's safe to ignore.
 
 ## Continuing development

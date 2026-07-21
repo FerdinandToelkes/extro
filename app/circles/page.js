@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   getCurrentProfile,
   listAllProfiles,
@@ -31,7 +32,10 @@ export default function CirclesPage() {
   };
 
   useEffect(() => {
-    load();
+    (async () => {
+      await load();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggle = (id) =>
@@ -50,9 +54,9 @@ export default function CirclesPage() {
   return (
     <div className="min-h-screen bg-bg font-body">
       <div className="max-w-[620px] mx-auto px-4 pt-7 pb-16">
-        <a href="/" className="font-mono text-[11px] text-indigo">
+        <Link href="/" className="font-mono text-[11px] text-indigo">
           ← Back to Feed
-        </a>
+        </Link>
         <h1 className="font-display font-bold text-2xl text-ink mt-2 mb-5">
           Friends & Groups
         </h1>

@@ -71,7 +71,7 @@ begin
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
-    upper(left(coalesce(new.raw_user_meta_data->>'name', new.email), 2))
+    upper(left(coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)), 2))
   );
   return new;
 end;
@@ -106,7 +106,9 @@ create policy "circles: select all" on circles for select to authenticated using
 create policy "circles: insert own" on circles for insert to authenticated with check (auth.uid() = owner_id);
 
 create policy "circle_members: select all" on circle_members for select to authenticated using (true);
-create policy "circle_members: insert" on circle_members for insert to authenticated with check (true);
+create policy "circle_members: insert own circle" on circle_members for insert to authenticated with check (
+  exists (select 1 from circles c where c.id = circle_id and c.owner_id = auth.uid())
+);
 
 create policy "activities: select all" on activities for select to authenticated using (true);
 create policy "activities: insert own" on activities for insert to authenticated with check (auth.uid() = author_id);
@@ -114,13 +116,17 @@ create policy "activities: update own" on activities for update to authenticated
 create policy "activities: delete own" on activities for delete to authenticated using (auth.uid() = author_id);
 
 create policy "vis_circles: select all" on activity_visibility_circles for select to authenticated using (true);
-create policy "vis_circles: insert" on activity_visibility_circles for insert to authenticated with check (true);
+create policy "vis_circles: insert own activity" on activity_visibility_circles for insert to authenticated with check (
+  exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
+);
 create policy "vis_circles: delete own activity" on activity_visibility_circles for delete to authenticated using (
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );
 
 create policy "vis_people: select all" on activity_visibility_people for select to authenticated using (true);
-create policy "vis_people: insert" on activity_visibility_people for insert to authenticated with check (true);
+create policy "vis_people: insert own activity" on activity_visibility_people for insert to authenticated with check (
+  exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
+);
 create policy "vis_people: delete own activity" on activity_visibility_people for delete to authenticated using (
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );

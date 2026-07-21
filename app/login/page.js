@@ -28,7 +28,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm bg-white border border-border rounded-2xl p-8">
         <h1 className="font-display font-bold text-2xl mb-1">Extro: Activities Feed</h1>
         <p className="text-inksoft text-sm mb-6 font-body">
-          Sign up with your email address—you'll receive a login link; no password is required.
+          Sign up with your email address—you&apos;ll receive a login link; no password is required.
         </p>
         {sent ? (
           <p className="font-body text-sm text-sage">

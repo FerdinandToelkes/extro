@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "../lib/supabaseClient";
 import {
   getCurrentProfile,
@@ -164,6 +165,7 @@ export default function FeedPage() {
       text: `${group[0].text} (merged: ${authorNames.join(", ")})`,
       category: group[0].category,
       timeframe: group[0].timeframe,
+      location: group.find((a) => a.location)?.location || "",
       circleIds,
       peopleIds,
     });
@@ -213,12 +215,12 @@ export default function FeedPage() {
               {c.name} · {c.memberIds.length}
             </div>
           ))}
-          <a
+          <Link
             href="/circles"
             className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
           >
             + Manage Circles
-          </a>
+          </Link>
         </div>
 
         {editing ? (

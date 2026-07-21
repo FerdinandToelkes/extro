@@ -113,7 +113,7 @@ export default function NewActivityForm({
         <div className="flex gap-2 mb-4 flex-wrap">
           {circles.length === 0 && (
             <span className="text-[13px] text-gray-400 font-body">
-              No friend circles yet – create one under "Circles".
+              No friend circles yet – create one under &quot;Circles&quot;.
             </span>
           )}
           {circles.map((c) => (
