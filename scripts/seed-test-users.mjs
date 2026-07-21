@@ -1,4 +1,5 @@
-// Creates a few password-based test accounts for local multi-user testing,
+// Creates a few password-based test accounts (each with a username, so the
+// Friends page's search-by-username works) for local multi-user testing,
 // makes them friends with each other, shares a circle, and posts two
 // overlapping activities (same category + timeframe) so there's an overlap
 // banner ready to test Merge on immediately.
@@ -35,9 +36,9 @@ if (!url || !anonKey) {
 
 const PASSWORD = "testpass123";
 const MOCK_USERS = [
-  { email: "mock-alice@extro.test", name: "Alice" },
-  { email: "mock-bob@extro.test", name: "Bob" },
-  { email: "mock-carol@extro.test", name: "Carol" },
+  { email: "mock-alice@extro.test", name: "Alice", username: "alice" },
+  { email: "mock-bob@extro.test", name: "Bob", username: "bob" },
+  { email: "mock-carol@extro.test", name: "Carol", username: "carol" },
 ];
 
 function newClient() {
@@ -46,12 +47,12 @@ function newClient() {
   });
 }
 
-async function signUpOrSignIn(email, name) {
+async function signUpOrSignIn(email, name, username) {
   const client = newClient();
   const { data: signUpData, error: signUpError } = await client.auth.signUp({
     email,
     password: PASSWORD,
-    options: { data: { name } },
+    options: { data: { name, username } },
   });
   if (signUpError) throw signUpError;
   if (signUpData.session) return { client, id: signUpData.user.id };
@@ -73,9 +74,9 @@ async function main() {
   console.log("Creating mock users...");
   const users = [];
   for (const u of MOCK_USERS) {
-    const { client, id } = await signUpOrSignIn(u.email, u.name);
+    const { client, id } = await signUpOrSignIn(u.email, u.name, u.username);
     users.push({ ...u, client, id });
-    console.log(`  ${u.name} <${u.email}> ready`);
+    console.log(`  ${u.name} (@${u.username}) <${u.email}> ready`);
   }
 
   console.log("Friending all mock users with each other...");
@@ -133,7 +134,7 @@ async function main() {
   }
 
   console.log(`\nDone! Log in as any of these (password: ${PASSWORD}):`);
-  for (const u of users) console.log(`  ${u.email}`);
+  for (const u of users) console.log(`  ${u.email} (username: ${u.username})`);
   console.log('\nThey all share the "Mock Squad" circle and are mutual friends.');
   console.log(
     "Alice and Bob each posted a Sport/Today activity — log in as either (or Carol) to see the overlap banner and try Merge."
