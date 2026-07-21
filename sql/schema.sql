@@ -8,6 +8,10 @@ create table profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   name text not null default 'Unknown',
   avatar_initials text,
+  -- Optional, free text. City doubles as a feed filter ("same city as me");
+  -- bio is just a short display tagline, not used anywhere else yet.
+  city text,
+  bio text,
   created_at timestamptz default now()
 );
 

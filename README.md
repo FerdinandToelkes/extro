@@ -75,8 +75,11 @@ in environment variables.
    - `sql/migration_activity_tags.sql` — adds optional interest tags
      (separate from category) for browsing/filtering the feed, and updates
      the merge function so tags carry over when activities are merged.
+   - `sql/migration_profile_fields.sql` — adds optional `city` and `bio`
+     fields to your profile, editable on the new Profile page. City doubles
+     as a feed filter ("same city as me").
 
-   On a brand-new project you can skip all seven (the sixth is a hotfix,
+   On a brand-new project you can skip all eight (the sixth is a hotfix,
    not needed at all on a fresh project) — the full `schema.sql` already
    includes the correct version of those changes (`schema.sql` itself also
    enables `pg_cron` the same way, so the note above applies there too).

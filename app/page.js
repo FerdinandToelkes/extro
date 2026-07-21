@@ -43,6 +43,10 @@ function findOverlaps(activities) {
   );
 }
 
+function normalizeCity(city) {
+  return (city || "").trim().toLowerCase();
+}
+
 export default function FeedPage() {
   const router = useRouter();
   const [me, setMe] = useState(null);
@@ -56,6 +60,8 @@ export default function FeedPage() {
   const [dismissed, setDismissed] = useState([]);
   const [error, setError] = useState("");
   const [activeTags, setActiveTags] = useState([]);
+  const [activeCategories, setActiveCategories] = useState([]);
+  const [sameCityOnly, setSameCityOnly] = useState(false);
 
   const loadAll = useCallback(async () => {
     const [profs, circs, acts, reqs] = await Promise.all([
@@ -123,16 +129,30 @@ export default function FeedPage() {
     [visibleActivities]
   );
 
+  const allCategories = useMemo(
+    () => [...new Set(visibleActivities.map((a) => a.category))].sort(),
+    [visibleActivities]
+  );
+
   const filteredActivities = useMemo(
     () =>
-      activeTags.length === 0
-        ? visibleActivities
-        : visibleActivities.filter((a) => a.tags.some((t) => activeTags.includes(t))),
-    [visibleActivities, activeTags]
+      visibleActivities.filter((a) => {
+        if (activeCategories.length > 0 && !activeCategories.includes(a.category)) return false;
+        if (activeTags.length > 0 && !a.tags.some((t) => activeTags.includes(t))) return false;
+        if (sameCityOnly) {
+          const authorCity = normalizeCity(profilesById[a.authorId]?.city);
+          if (!authorCity || authorCity !== normalizeCity(me?.city)) return false;
+        }
+        return true;
+      }),
+    [visibleActivities, activeCategories, activeTags, sameCityOnly, profilesById, me]
   );
 
   const toggleActiveTag = (t) =>
     setActiveTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+
+  const toggleActiveCategory = (c) =>
+    setActiveCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
   const mergeCandidates = useMemo(() => {
     if (!editing) return [];
@@ -350,6 +370,12 @@ export default function FeedPage() {
           >
             + Manage Friends{incomingRequestCount > 0 ? ` · ${incomingRequestCount}` : ""}
           </Link>
+          <Link
+            href="/profile"
+            className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
+          >
+            + My Profile
+          </Link>
         </div>
 
         {editing ? (
@@ -393,8 +419,32 @@ export default function FeedPage() {
           />
         ))}
 
+        {allCategories.length > 0 && (
+          <div className="flex gap-2 mb-2 flex-wrap items-center">
+            <span className="font-mono text-[10.5px] text-gray-400 uppercase tracking-wide">
+              Category
+            </span>
+            {allCategories.map((c) => (
+              <button
+                key={c}
+                onClick={() => toggleActiveCategory(c)}
+                className={`font-mono text-[11.5px] rounded-full px-3 py-1 border ${
+                  activeCategories.includes(c)
+                    ? "border-indigo bg-indigo/10 text-indigo"
+                    : "border-border bg-white text-inksoft"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
+
         {allTags.length > 0 && (
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2 mb-2 flex-wrap items-center">
+            <span className="font-mono text-[10.5px] text-gray-400 uppercase tracking-wide">
+              Tags
+            </span>
             {allTags.map((t) => (
               <button
                 key={t}
@@ -408,6 +458,27 @@ export default function FeedPage() {
                 {t}
               </button>
             ))}
+          </div>
+        )}
+
+        {me?.city ? (
+          <div className="flex gap-2 mb-4 flex-wrap">
+            <button
+              onClick={() => setSameCityOnly((v) => !v)}
+              className={`font-mono text-[11.5px] rounded-full px-3 py-1 border ${
+                sameCityOnly
+                  ? "border-indigo bg-indigo/10 text-indigo"
+                  : "border-border bg-white text-inksoft"
+              }`}
+            >
+              📍 Same city ({me.city})
+            </button>
+          </div>
+        ) : (
+          <div className="mb-4">
+            <Link href="/profile" className="font-mono text-[11px] text-gray-400">
+              Set your city on your profile to filter by nearby activities.
+            </Link>
           </div>
         )}
 
