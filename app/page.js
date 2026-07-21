@@ -54,6 +54,7 @@ export default function FeedPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [dismissed, setDismissed] = useState([]);
+  const [error, setError] = useState("");
 
   const loadAll = useCallback(async () => {
     const [profs, circs, acts, reqs] = await Promise.all([
@@ -116,6 +117,17 @@ export default function FeedPage() {
     );
   }, [visibleActivities, dismissed]);
 
+  const mergeCandidates = useMemo(() => {
+    if (!editing) return [];
+    return visibleActivities.filter(
+      (a) =>
+        a.id !== editing.id &&
+        a.category === editing.category &&
+        a.timeframe === editing.timeframe &&
+        a.authorId !== editing.authorId
+    );
+  }, [visibleActivities, editing]);
+
   const friendIds = useMemo(
     () => friendRequests.filter((r) => r.status === "accepted").map((r) => r.otherId),
     [friendRequests]
@@ -126,13 +138,23 @@ export default function FeedPage() {
   );
 
   const handleRespond = async (activityId, status) => {
-    await setActivityResponse(activityId, me.id, status);
-    await loadAll();
+    setError("");
+    try {
+      await setActivityResponse(activityId, me.id, status);
+      await loadAll();
+    } catch (err) {
+      setError(err.message || String(err));
+    }
   };
 
   const handleSendMessage = async (activityId, text) => {
-    await sendMessage(activityId, me.id, text);
-    await loadAll();
+    setError("");
+    try {
+      await sendMessage(activityId, me.id, text);
+      await loadAll();
+    } catch (err) {
+      setError(err.message || String(err));
+    }
   };
 
   const handleCreate = async ({
@@ -144,17 +166,23 @@ export default function FeedPage() {
     circleIds,
     peopleIds,
   }) => {
-    await createActivity({
-      authorId: me.id,
-      text,
-      category,
-      timeframe,
-      location,
-      expireAfterDays,
-      circleIds,
-      peopleIds,
-    });
-    await loadAll();
+    setError("");
+    try {
+      await createActivity({
+        authorId: me.id,
+        text,
+        category,
+        timeframe,
+        location,
+        expireAfterDays,
+        circleIds,
+        peopleIds,
+      });
+      await loadAll();
+    } catch (err) {
+      setError(err.message || String(err));
+      throw err;
+    }
   };
 
   const handleUpdate = async ({
@@ -166,17 +194,23 @@ export default function FeedPage() {
     circleIds,
     peopleIds,
   }) => {
-    await updateActivity({
-      activityId: editing.id,
-      text,
-      category,
-      timeframe,
-      location,
-      expireAfterDays,
-      circleIds,
-      peopleIds,
-    });
-    await loadAll();
+    setError("");
+    try {
+      await updateActivity({
+        activityId: editing.id,
+        text,
+        category,
+        timeframe,
+        location,
+        expireAfterDays,
+        circleIds,
+        peopleIds,
+      });
+      await loadAll();
+    } catch (err) {
+      setError(err.message || String(err));
+      throw err;
+    }
   };
 
   const handleEdit = (activity) => {
@@ -186,27 +220,49 @@ export default function FeedPage() {
   };
 
   const handleDelete = async (activityId) => {
-    await deleteActivity(activityId);
-    await loadAll();
+    setError("");
+    try {
+      await deleteActivity(activityId);
+      await loadAll();
+    } catch (err) {
+      setError(err.message || String(err));
+    }
   };
 
   const handleMerge = async (group) => {
+    setError("");
     const key = group.map((a) => a.id).sort().join("-");
     const authorNames = [...new Set(group.map((a) => profilesById[a.authorId]?.name))];
     const circleIds = [...new Set(group.flatMap((a) => a.visibleCircleIds))];
     const peopleIds = [...new Set(group.flatMap((a) => a.visiblePeopleIds))];
-    await mergeActivities({
-      sourceActivityIds: group.map((a) => a.id),
-      text: `${group[0].text} (merged: ${authorNames.join(", ")})`,
-      category: group[0].category,
-      timeframe: group[0].timeframe,
-      location: group.find((a) => a.location)?.location || "",
-      expireAfterDays: group[0].expireAfterDays,
-      circleIds,
-      peopleIds,
-    });
+    try {
+      await mergeActivities({
+        sourceActivityIds: group.map((a) => a.id),
+        text: `${group[0].text} (merged: ${authorNames.join(", ")})`,
+        category: group[0].category,
+        timeframe: group[0].timeframe,
+        location: group.find((a) => a.location)?.location || "",
+        expireAfterDays: group[0].expireAfterDays,
+        circleIds,
+        peopleIds,
+      });
+      setDismissed((prev) => [...prev, key]);
+      await loadAll();
+      return true;
+    } catch (err) {
+      setError(err.message || String(err));
+      return false;
+    }
+  };
+
+  const handleDismissOverlap = (group) => {
+    const key = group.map((a) => a.id).sort().join("-");
     setDismissed((prev) => [...prev, key]);
-    await loadAll();
+  };
+
+  const handleMergeWith = async (candidate) => {
+    const ok = await handleMerge([editing, candidate]);
+    if (ok) setEditing(null);
   };
 
   const handleLogout = async () => {
@@ -242,6 +298,15 @@ export default function FeedPage() {
           </button>
         </div>
 
+        {error && (
+          <div className="flex items-start justify-between gap-3 bg-coral/10 border border-coral/40 rounded-xl px-4 py-2.5 mb-4 font-body text-[13px] text-coral">
+            <span>{error}</span>
+            <button onClick={() => setError("")} className="font-mono text-[13px] leading-none">
+              ×
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-2 mb-5 flex-wrap">
           {circles.map((c) => (
             <div
@@ -273,6 +338,8 @@ export default function FeedPage() {
             friendIds={friendIds}
             meId={me.id}
             initial={editing}
+            mergeCandidates={mergeCandidates}
+            onMergeWith={handleMergeWith}
             onCreate={handleUpdate}
             onClose={() => setEditing(null)}
           />
@@ -300,6 +367,7 @@ export default function FeedPage() {
             group={group}
             profilesById={profilesById}
             onMerge={handleMerge}
+            onDismiss={handleDismissOverlap}
           />
         ))}
 

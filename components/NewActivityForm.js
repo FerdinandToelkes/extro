@@ -13,6 +13,8 @@ export default function NewActivityForm({
   onCreate,
   onClose,
   initial = null,
+  mergeCandidates = [],
+  onMergeWith,
 }) {
   const isEditing = Boolean(initial);
   const [text, setText] = useState(initial?.text ?? "");
@@ -160,6 +162,38 @@ export default function NewActivityForm({
             </button>
           ))}
         </div>
+      )}
+
+      {isEditing && mergeCandidates.length > 0 && (
+        <>
+          <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
+            Possible merges{" "}
+            <span className="normal-case tracking-normal text-gray-400">
+              (same category &amp; timeframe as this one)
+            </span>
+          </label>
+          <div className="flex flex-col gap-2 mb-4">
+            {mergeCandidates.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center justify-between gap-2 border border-border rounded-lg px-3 py-2"
+              >
+                <span className="text-[13px] text-inksoft font-body">
+                  <b className="font-display text-ink">
+                    {profiles.find((p) => p.id === c.authorId)?.name}:
+                  </b>{" "}
+                  {c.text}
+                </span>
+                <button
+                  onClick={() => onMergeWith(c)}
+                  className="font-display font-semibold text-[12px] px-3 py-1 rounded-full bg-indigo text-white shrink-0"
+                >
+                  Merge
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <div className="flex gap-2.5 mt-4">

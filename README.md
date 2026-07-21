@@ -102,6 +102,13 @@ your other tabs too. To have several people logged in at once:
 Password sign-up with "Confirm email" off (step 1.5) makes creating these
 test accounts instant, even with made-up email addresses.
 
+**Or skip creating accounts by hand:** `npm run seed:test-users` creates
+three mock accounts (Alice/Bob/Carol, password `testpass123`), friends them
+with each other, shares a "Mock Squad" circle, and posts two overlapping
+Sport/Today activities — so there's an overlap banner ready to test Merge
+on immediately after it runs. Safe to re-run, though it'll add a fresh
+duplicate circle/activities each time.
+
 ## 3. Push to GitHub
 
 ```bash

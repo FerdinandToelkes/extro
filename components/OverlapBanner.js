@@ -1,9 +1,16 @@
 import Avatar from "./Avatar";
 
-export default function OverlapBanner({ group, profilesById, onMerge }) {
+export default function OverlapBanner({ group, profilesById, onMerge, onDismiss }) {
   const authorIds = [...new Set(group.map((a) => a.authorId))];
   return (
-    <div className="bg-indigo/5 border-[1.5px] border-dashed border-indigo/40 rounded-2xl p-4 mb-3.5 flex items-center gap-3.5 flex-wrap">
+    <div className="relative bg-indigo/5 border-[1.5px] border-dashed border-indigo/40 rounded-2xl p-4 pr-9 mb-3.5 flex items-center gap-3.5 flex-wrap">
+      <button
+        onClick={() => onDismiss(group)}
+        aria-label="Dismiss"
+        className="absolute top-2 right-2.5 font-mono text-base leading-none text-indigo/50 hover:text-indigo"
+      >
+        ×
+      </button>
       <div className="flex">
         {authorIds.map((uid, i) =>
           profilesById[uid] ? (
