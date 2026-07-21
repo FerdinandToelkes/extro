@@ -52,9 +52,15 @@ in environment variables.
    - `sql/migration_friend_requests.sql` — adds the friend request/accept
      flow. Adding someone to a circle, or sharing an activity with them
      individually, now requires an accepted friend request first.
+   - `sql/migration_activity_expiry.sql` — adds self-expiring activities
+     (see below). This one enables the **`pg_cron`** Postgres extension; if
+     the `create extension pg_cron` line errors with a permissions message,
+     enable it first under **Database → Extensions → pg_cron** in the
+     dashboard, then re-run just the last two statements of that file.
 
-   On a brand-new project you can skip all three — the full `schema.sql`
-   already includes those changes.
+   On a brand-new project you can skip all four — the full `schema.sql`
+   already includes those changes (`schema.sql` itself also enables
+   `pg_cron` the same way, so the note above applies there too).
 
 ## 2. Test locally (optional, but recommended before going live)
 
@@ -118,6 +124,13 @@ manual re-upload needed.
   trying it out, but it's a point we can clean up later.
 - **Friend circles** only consist of people who have already signed up (no
   address-book import). That's enough for the first test run among friends.
+- **Auto-delete timing** is approximate: the "When" chip (Today/Tomorrow/
+  Weekend) is a vibe, not an exact date, so the auto-delete countdown is
+  based on that approximation (e.g. "Weekend" resolves to the coming
+  Saturday) plus however many days you set, not a precise event timestamp.
+  An hourly `pg_cron` job does the actual deleting, so an activity can
+  briefly outlive its expiry by up to that hour (the feed hides it
+  immediately regardless).
 
 ## About the `npm install` warnings
 

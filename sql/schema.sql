@@ -48,6 +48,10 @@ create table activities (
   category text not null,
   timeframe text not null,
   location text,
+  -- How many days after the event this activity auto-deletes (see the
+  -- cron job below); expires_at is computed client-side at create/edit time.
+  expire_after_days integer not null default 1 check (expire_after_days >= 0),
+  expires_at timestamptz,
   created_at timestamptz default now()
 );
 
@@ -168,3 +172,16 @@ create policy "joins: delete own" on activity_joins for delete to authenticated 
 
 create policy "messages: select all" on activity_messages for select to authenticated using (true);
 create policy "messages: insert own" on activity_messages for insert to authenticated with check (auth.uid() = author_id);
+
+-- Self-expiring activities: an hourly job permanently deletes activities
+-- past their expiry (joins/messages/visibility rows cascade automatically).
+-- If this errors with a permissions message, enable "pg_cron" first under
+-- Database -> Extensions in the Supabase dashboard, then re-run just this
+-- block.
+create extension if not exists pg_cron;
+
+select cron.schedule(
+  'delete-expired-activities',
+  '0 * * * *',
+  $$ delete from public.activities where expires_at is not null and expires_at <= now(); $$
+);

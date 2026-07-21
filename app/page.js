@@ -134,26 +134,44 @@ export default function FeedPage() {
     await loadAll();
   };
 
-  const handleCreate = async ({ text, category, timeframe, location, circleIds, peopleIds }) => {
+  const handleCreate = async ({
+    text,
+    category,
+    timeframe,
+    location,
+    expireAfterDays,
+    circleIds,
+    peopleIds,
+  }) => {
     await createActivity({
       authorId: me.id,
       text,
       category,
       timeframe,
       location,
+      expireAfterDays,
       circleIds,
       peopleIds,
     });
     await loadAll();
   };
 
-  const handleUpdate = async ({ text, category, timeframe, location, circleIds, peopleIds }) => {
+  const handleUpdate = async ({
+    text,
+    category,
+    timeframe,
+    location,
+    expireAfterDays,
+    circleIds,
+    peopleIds,
+  }) => {
     await updateActivity({
       activityId: editing.id,
       text,
       category,
       timeframe,
       location,
+      expireAfterDays,
       circleIds,
       peopleIds,
     });
@@ -182,6 +200,7 @@ export default function FeedPage() {
       category: group[0].category,
       timeframe: group[0].timeframe,
       location: group.find((a) => a.location)?.location || "",
+      expireAfterDays: group[0].expireAfterDays,
       circleIds,
       peopleIds,
     });
@@ -235,7 +254,13 @@ export default function FeedPage() {
             href="/circles"
             className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
           >
-            + Manage Circles{incomingRequestCount > 0 ? ` · ${incomingRequestCount}` : ""}
+            + Manage Circles
+          </Link>
+          <Link
+            href="/friends"
+            className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
+          >
+            + Manage Friends{incomingRequestCount > 0 ? ` · ${incomingRequestCount}` : ""}
           </Link>
         </div>
 

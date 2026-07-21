@@ -19,6 +19,7 @@ export default function NewActivityForm({
   const [category, setCategory] = useState(initial?.category ?? CATEGORIES[0]);
   const [timeframe, setTimeframe] = useState(initial?.timeframe ?? TIMEFRAMES[0]);
   const [location, setLocation] = useState(initial?.location ?? "");
+  const [expireAfterDays, setExpireAfterDays] = useState(initial?.expireAfterDays ?? 1);
   const [visType, setVisType] = useState(
     initial?.visiblePeopleIds?.length ? "people" : "circle"
   );
@@ -40,6 +41,7 @@ export default function NewActivityForm({
         category,
         timeframe,
         location: location.trim(),
+        expireAfterDays,
         circleIds: visType === "circle" ? selectedCircles : [],
         peopleIds: visType === "people" ? selectedPeople : [],
       });
@@ -100,6 +102,20 @@ export default function NewActivityForm({
       />
 
       <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
+        Auto-delete{" "}
+        <span className="normal-case tracking-normal text-gray-400">
+          (days after the event)
+        </span>
+      </label>
+      <input
+        type="number"
+        min={0}
+        value={expireAfterDays}
+        onChange={(e) => setExpireAfterDays(Math.max(0, Number(e.target.value) || 0))}
+        className="w-20 border border-border rounded-lg px-3 py-2 font-body text-sm mb-4 outline-none"
+      />
+
+      <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
         Visible to
       </label>
       <div className="flex gap-2 mb-2.5">
@@ -131,7 +147,7 @@ export default function NewActivityForm({
         <div className="flex gap-2 mb-4 flex-wrap">
           {friends.length === 0 && (
             <span className="text-[13px] text-gray-400 font-body">
-              No friends yet – add some under &quot;Circles&quot;.
+              No friends yet – add some under &quot;Friends&quot;.
             </span>
           )}
           {friends.map((f) => (

@@ -99,9 +99,19 @@ export default function ActivityCard({
             </div>
           )}
 
-          <div className="font-mono text-[11px] text-gray-400 mb-3">
+          <div className="font-mono text-[11px] text-gray-400 mb-1">
             {visibilityLabel}
           </div>
+
+          {activity.expiresAt && (
+            <div className="font-mono text-[11px] text-gray-400 mb-3">
+              Auto-deletes{" "}
+              {new Date(activity.expiresAt).toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+              })}
+            </div>
+          )}
 
           <div className="flex items-center gap-2.5 flex-wrap">
             <div className="flex mr-1">
