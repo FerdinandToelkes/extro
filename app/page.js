@@ -151,6 +151,15 @@ export default function FeedPage() {
     [visibleActivities, activeCategories, activeTags, sameCityOnly, profilesById, me]
   );
 
+  const mySubscribedTags = useMemo(() => me?.subscribed_tags ?? [], [me]);
+
+  // Activities matching a subscribed tag bubble to the top; stable sort
+  // keeps recency ordering within each group.
+  const sortedActivities = useMemo(() => {
+    const matches = (a) => a.tags.some((t) => mySubscribedTags.includes(t));
+    return [...filteredActivities].sort((a, b) => Number(matches(b)) - Number(matches(a)));
+  }, [filteredActivities, mySubscribedTags]);
+
   const toggleActiveTag = (t) =>
     setActiveTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
 
@@ -520,13 +529,14 @@ export default function FeedPage() {
           </div>
         )}
 
-        {filteredActivities.map((a) => (
+        {sortedActivities.map((a) => (
           <ActivityCard
             key={a.id}
             activity={a}
             profilesById={profilesById}
             circlesById={circlesById}
             meId={me.id}
+            mySubscribedTags={mySubscribedTags}
             onRespond={handleRespond}
             onSendMessage={handleSendMessage}
             onEdit={handleEdit}

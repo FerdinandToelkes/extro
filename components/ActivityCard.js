@@ -21,6 +21,7 @@ export default function ActivityCard({
   profilesById,
   circlesById,
   meId,
+  mySubscribedTags = [],
   onRespond,
   onSendMessage,
   onEdit,
@@ -37,6 +38,7 @@ export default function ActivityCard({
   const myResponse = activity.responses.find((r) => r.personId === meId)?.status;
   const chatActive = joinedIds.length + interestedIds.length >= 2;
   const needsPlan = chatActive && !activity.location && !activity.eventAt;
+  const matchesInterest = activity.tags?.some((t) => mySubscribedTags.includes(t));
   const author = profilesById[activity.authorId];
   const isMine = activity.authorId === meId;
 
@@ -91,6 +93,11 @@ export default function ActivityCard({
                 {t}
               </span>
             ))}
+            {matchesInterest && (
+              <span className="font-mono text-[11px] text-sand bg-sand/10 border border-sand/40 rounded-full px-2 py-0.5">
+                ⭐ Matches your interests
+              </span>
+            )}
             {isMine && (
               <span className="ml-auto flex gap-1.5">
                 <button

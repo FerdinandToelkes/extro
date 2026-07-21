@@ -90,8 +90,11 @@ in environment variables.
      friends" on their profile page.
    - `sql/migration_availability.sql` — adds "I'm generally free" status
      sharing (visible to your friends, shown on the feed and on profiles).
+   - `sql/migration_subscribed_tags.sql` — adds tag subscriptions
+     ("recurring interests"), set on your Profile page. Matching activities
+     get a badge and sort to the top of your feed.
 
-   On a brand-new project you can skip all eleven (the sixth is a hotfix,
+   On a brand-new project you can skip all twelve (the sixth is a hotfix,
    not needed at all on a fresh project) — the full `schema.sql` already
    includes the correct version of those changes (`schema.sql` itself also
    enables `pg_cron` the same way, so the note above applies there too).

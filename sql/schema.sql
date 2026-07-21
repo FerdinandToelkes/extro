@@ -23,6 +23,9 @@ create table profiles (
   available_day text,
   available_time_of_day text,
   available_until timestamptz,
+  -- Tags (same vocabulary as activities.tags) this person wants surfaced
+  -- and highlighted on their feed -- a "recurring interest" subscription.
+  subscribed_tags text[] not null default '{}',
   created_at timestamptz default now()
 );
 

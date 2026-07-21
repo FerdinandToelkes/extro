@@ -7,6 +7,7 @@ import { getCurrentProfile, updateMyProfile } from "../../lib/queries";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 const USERNAME_HINT = "3-20 characters: lowercase letters, numbers, underscore.";
+const TAGS = ["Outdoors", "Games", "Music", "Fitness", "Coffee", "Nightlife", "Learning", "Chill"];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("");
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
+  const [subscribedTags, setSubscribedTags] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -30,9 +32,18 @@ export default function ProfilePage() {
       setUsername(profile.username ?? "");
       setCity(profile.city ?? "");
       setBio(profile.bio ?? "");
+      setSubscribedTags(profile.subscribed_tags ?? []);
       setLoading(false);
     })();
   }, [router]);
+
+  const toggleTag = (t) =>
+    setSubscribedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+
+  const chip = (active) =>
+    `font-display text-[13px] font-semibold px-3.5 py-1.5 rounded-full border cursor-pointer ${
+      active ? "border-indigo bg-indigo/10 text-indigo" : "border-border bg-white text-inksoft"
+    }`;
 
   const submit = async () => {
     if (!name.trim() || saving) return;
@@ -50,6 +61,7 @@ export default function ProfilePage() {
         username: normalizedUsername,
         city: city.trim(),
         bio: bio.trim(),
+        subscribedTags,
       });
       setSaved(true);
     } catch (err) {
@@ -123,6 +135,22 @@ export default function ProfilePage() {
               rows={2}
               className="w-full resize-none border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
             />
+          </div>
+
+          <div>
+            <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
+              My Interests{" "}
+              <span className="normal-case tracking-normal text-gray-400">
+                (matching activities get highlighted on your feed)
+              </span>
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {TAGS.map((t) => (
+                <button key={t} className={chip(subscribedTags.includes(t))} onClick={() => toggleTag(t)}>
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
