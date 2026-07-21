@@ -32,6 +32,7 @@ create table activities (
   text text not null,
   category text not null,
   timeframe text not null,
+  location text,
   created_at timestamptz default now()
 );
 
@@ -109,12 +110,20 @@ create policy "circle_members: insert" on circle_members for insert to authentic
 
 create policy "activities: select all" on activities for select to authenticated using (true);
 create policy "activities: insert own" on activities for insert to authenticated with check (auth.uid() = author_id);
+create policy "activities: update own" on activities for update to authenticated using (auth.uid() = author_id) with check (auth.uid() = author_id);
+create policy "activities: delete own" on activities for delete to authenticated using (auth.uid() = author_id);
 
 create policy "vis_circles: select all" on activity_visibility_circles for select to authenticated using (true);
 create policy "vis_circles: insert" on activity_visibility_circles for insert to authenticated with check (true);
+create policy "vis_circles: delete own activity" on activity_visibility_circles for delete to authenticated using (
+  exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
+);
 
 create policy "vis_people: select all" on activity_visibility_people for select to authenticated using (true);
 create policy "vis_people: insert" on activity_visibility_people for insert to authenticated with check (true);
+create policy "vis_people: delete own activity" on activity_visibility_people for delete to authenticated using (
+  exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
+);
 
 create policy "joins: select all" on activity_joins for select to authenticated using (true);
 create policy "joins: insert own" on activity_joins for insert to authenticated with check (auth.uid() = person_id);

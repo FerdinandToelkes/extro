@@ -5,13 +5,24 @@ import { useState } from "react";
 const TIMEFRAMES = ["Today", "Tomorrow", "Weekend"];
 const CATEGORIES = ["Sport", "Café", "Culture", "Leisure", "Food", "Other"];
 
-export default function NewActivityForm({ circles, profiles, meId, onCreate, onClose }) {
-  const [text, setText] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [timeframe, setTimeframe] = useState(TIMEFRAMES[0]);
-  const [visType, setVisType] = useState("circle");
-  const [selectedCircles, setSelectedCircles] = useState([]);
-  const [selectedPeople, setSelectedPeople] = useState([]);
+export default function NewActivityForm({
+  circles,
+  profiles,
+  meId,
+  onCreate,
+  onClose,
+  initial = null,
+}) {
+  const isEditing = Boolean(initial);
+  const [text, setText] = useState(initial?.text ?? "");
+  const [category, setCategory] = useState(initial?.category ?? CATEGORIES[0]);
+  const [timeframe, setTimeframe] = useState(initial?.timeframe ?? TIMEFRAMES[0]);
+  const [location, setLocation] = useState(initial?.location ?? "");
+  const [visType, setVisType] = useState(
+    initial?.visiblePeopleIds?.length ? "people" : "circle"
+  );
+  const [selectedCircles, setSelectedCircles] = useState(initial?.visibleCircleIds ?? []);
+  const [selectedPeople, setSelectedPeople] = useState(initial?.visiblePeopleIds ?? []);
   const [submitting, setSubmitting] = useState(false);
 
   const friends = profiles.filter((p) => p.id !== meId);
@@ -27,6 +38,7 @@ export default function NewActivityForm({ circles, profiles, meId, onCreate, onC
         text: text.trim(),
         category,
         timeframe,
+        location: location.trim(),
         circleIds: visType === "circle" ? selectedCircles : [],
         peopleIds: visType === "people" ? selectedPeople : [],
       });
@@ -77,6 +89,16 @@ export default function NewActivityForm({ circles, profiles, meId, onCreate, onC
       </div>
 
       <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
+        Location <span className="normal-case tracking-normal text-gray-400">(optional)</span>
+      </label>
+      <input
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        placeholder="e.g., near the main square, Mauerpark…"
+        className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm mb-4 outline-none"
+      />
+
+      <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
         Visible to
       </label>
       <div className="flex gap-2 mb-2.5">
@@ -124,7 +146,7 @@ export default function NewActivityForm({ circles, profiles, meId, onCreate, onC
           disabled={submitting}
           className="font-display font-semibold text-sm px-5 py-2 rounded-full bg-ink text-white disabled:opacity-50"
         >
-          {submitting ? "…" : "Publish"}
+          {submitting ? "…" : isEditing ? "Save Changes" : "Publish"}
         </button>
         <button
           onClick={onClose}

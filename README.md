@@ -34,6 +34,11 @@ in environment variables.
    the single most common reason login silently fails.
 5. Login runs via magic link (email) — that's on by default in Supabase, you
    don't need to change anything.
+6. **If you already ran an earlier version of `schema.sql`**, also run
+   `sql/migration_edit_delete_location.sql` once (same SQL editor). It adds the
+   optional `location` column and the policies that let authors edit/delete
+   their own activities. On a brand-new project you can skip this — the full
+   `schema.sql` already includes those changes.
 
 ## 2. Test locally (optional, but recommended before going live)
 
@@ -77,6 +82,14 @@ gh repo create extro --private --source=. --push
 
 Every change you commit and push later gets redeployed automatically — no
 manual re-upload needed.
+
+> ⚠️ **Changing an environment variable in Vercel does NOT take effect until you
+> redeploy.** The `NEXT_PUBLIC_*` values are baked into the build, so an old
+> value stays live until a new build runs. If you fix `NEXT_PUBLIC_SUPABASE_URL`
+> in the Vercel dashboard but still see errors like *"invalid path specified in
+> request URL"*, go to **Deployments → ⋯ on the latest one → Redeploy**. That
+> error specifically means a `/rest/v1/`-style URL is still in the live build —
+> use the plain `https://xxxx.supabase.co` Project URL (see step 1.4).
 
 ## What's intentionally kept simple for testing among friends
 

@@ -9,6 +9,8 @@ import {
   listCirclesWithMembers,
   listActivitiesFull,
   createActivity,
+  updateActivity,
+  deleteActivity,
   toggleJoin,
   sendMessage,
   subscribeToActivityChanges,
@@ -45,6 +47,7 @@ export default function FeedPage() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [dismissed, setDismissed] = useState([]);
 
   const loadAll = useCallback(async () => {
@@ -114,15 +117,40 @@ export default function FeedPage() {
     await loadAll();
   };
 
-  const handleCreate = async ({ text, category, timeframe, circleIds, peopleIds }) => {
+  const handleCreate = async ({ text, category, timeframe, location, circleIds, peopleIds }) => {
     await createActivity({
       authorId: me.id,
       text,
       category,
       timeframe,
+      location,
       circleIds,
       peopleIds,
     });
+    await loadAll();
+  };
+
+  const handleUpdate = async ({ text, category, timeframe, location, circleIds, peopleIds }) => {
+    await updateActivity({
+      activityId: editing.id,
+      text,
+      category,
+      timeframe,
+      location,
+      circleIds,
+      peopleIds,
+    });
+    await loadAll();
+  };
+
+  const handleEdit = (activity) => {
+    setShowForm(false);
+    setEditing(activity);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDelete = async (activityId) => {
+    await deleteActivity(activityId);
     await loadAll();
   };
 
@@ -193,7 +221,17 @@ export default function FeedPage() {
           </a>
         </div>
 
-        {showForm ? (
+        {editing ? (
+          <NewActivityForm
+            key={editing.id}
+            circles={circles}
+            profiles={profiles}
+            meId={me.id}
+            initial={editing}
+            onCreate={handleUpdate}
+            onClose={() => setEditing(null)}
+          />
+        ) : showForm ? (
           <NewActivityForm
             circles={circles}
             profiles={profiles}
@@ -228,6 +266,8 @@ export default function FeedPage() {
             meId={me.id}
             onJoin={handleJoin}
             onSendMessage={handleSendMessage}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         ))}
       </div>

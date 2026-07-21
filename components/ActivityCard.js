@@ -16,6 +16,8 @@ export default function ActivityCard({
   meId,
   onJoin,
   onSendMessage,
+  onEdit,
+  onDelete,
 }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -23,6 +25,7 @@ export default function ActivityCard({
   const hasJoined = activity.joined.includes(meId);
   const chatActive = activity.joined.length >= 2;
   const author = profilesById[activity.authorId];
+  const isMine = activity.authorId === meId;
 
   const visibilityLabel = activity.visibleCircleIds.length
     ? "Visible to: " +
@@ -64,11 +67,37 @@ export default function ActivityCard({
             >
               {activity.timeframe}
             </span>
+            {isMine && (
+              <span className="ml-auto flex gap-1.5">
+                <button
+                  onClick={() => onEdit(activity)}
+                  className="font-mono text-[11px] text-inksoft border border-border rounded-full px-2.5 py-0.5 hover:bg-bg"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm("Delete this activity? This also removes its chat and can't be undone.")) {
+                      onDelete(activity.id);
+                    }
+                  }}
+                  className="font-mono text-[11px] text-coral border border-coral/40 rounded-full px-2.5 py-0.5 hover:bg-coral/10"
+                >
+                  Delete
+                </button>
+              </span>
+            )}
           </div>
 
           <p className="font-body text-[15.5px] text-ink my-1.5 leading-snug">
             {activity.text}
           </p>
+
+          {activity.location && (
+            <div className="font-mono text-[11.5px] text-inksoft mb-1">
+              📍 {activity.location}
+            </div>
+          )}
 
           <div className="font-mono text-[11px] text-gray-400 mb-3">
             {visibilityLabel}
