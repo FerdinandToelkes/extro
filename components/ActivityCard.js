@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Avatar from "./Avatar";
 
 const TIMEFRAME_COLOR = {
@@ -66,9 +67,12 @@ export default function ActivityCard({
         {author && <Avatar profile={author} />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="font-display font-semibold text-ink">
+            <Link
+              href={`/profile/${activity.authorId}`}
+              className="font-display font-semibold text-ink hover:underline"
+            >
               {author?.name || "…"}
-            </span>
+            </Link>
             <span className="font-mono text-[11px] text-inksoft bg-bg border border-border rounded-full px-2 py-0.5">
               {activity.category}
             </span>

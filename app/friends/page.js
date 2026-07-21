@@ -82,7 +82,12 @@ export default function FriendsPage() {
                 key={p.id}
                 className="flex items-center justify-between gap-2 border border-border rounded-lg px-3 py-2"
               >
-                <span className="font-display font-semibold text-sm text-ink">{p.name}</span>
+                <Link
+                  href={`/profile/${p.id}`}
+                  className="font-display font-semibold text-sm text-ink hover:underline"
+                >
+                  {p.name}
+                </Link>
 
                 {!rel && (
                   <button

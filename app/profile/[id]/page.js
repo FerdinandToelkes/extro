@@ -1,0 +1,153 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import {
+  getCurrentProfile,
+  getProfileById,
+  listFriendRequests,
+  sendFriendRequest,
+  acceptFriendRequest,
+  removeFriendRequest,
+  subscribeToFriendRequests,
+} from "../../../lib/queries";
+import Avatar from "../../../components/Avatar";
+
+export default function ViewProfilePage() {
+  const router = useRouter();
+  const { id } = useParams();
+  const [me, setMe] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [rel, setRel] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    const meProfile = await getCurrentProfile();
+    if (!meProfile) {
+      router.replace("/login");
+      return;
+    }
+    if (id === meProfile.id) {
+      router.replace("/profile");
+      return;
+    }
+    setMe(meProfile);
+    const [target, requests] = await Promise.all([getProfileById(id), listFriendRequests()]);
+    setProfile(target);
+    setRel(requests.find((r) => r.otherId === id) ?? null);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    (async () => {
+      await load();
+    })();
+    const unsub = subscribeToFriendRequests(() => load());
+    return unsub;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  if (loading) return null;
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-bg font-body">
+        <div className="max-w-[620px] mx-auto px-4 pt-7 pb-16">
+          <Link href="/" className="font-mono text-[11px] text-indigo">
+            ← Back to Feed
+          </Link>
+          <p className="mt-4 font-body text-sm text-gray-400">Profile not found.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-bg font-body">
+      <div className="max-w-[620px] mx-auto px-4 pt-7 pb-16">
+        <Link href="/" className="font-mono text-[11px] text-indigo">
+          ← Back to Feed
+        </Link>
+
+        <div className="bg-white border border-border rounded-2xl p-5 mt-4 flex items-start gap-4">
+          <Avatar profile={profile} size={56} />
+          <div className="flex-1 min-w-0">
+            <h1 className="font-display font-bold text-xl text-ink">{profile.name}</h1>
+            {profile.city && (
+              <div className="font-mono text-[11.5px] text-inksoft mt-1">📍 {profile.city}</div>
+            )}
+            {profile.bio && <p className="font-body text-sm text-inksoft mt-2">{profile.bio}</p>}
+
+            <div className="mt-4">
+              {!rel && (
+                <button
+                  onClick={async () => {
+                    await sendFriendRequest(me.id, profile.id);
+                    await load();
+                  }}
+                  className="font-mono text-[11px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
+                >
+                  Add Friend
+                </button>
+              )}
+
+              {rel?.status === "pending" && rel.direction === "outgoing" && (
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] text-gray-400">Requested</span>
+                  <button
+                    onClick={async () => {
+                      await removeFriendRequest(rel.id);
+                      await load();
+                    }}
+                    className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {rel?.status === "pending" && rel.direction === "incoming" && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      await acceptFriendRequest(rel.id);
+                      await load();
+                    }}
+                    className="font-display font-semibold text-[12px] text-white bg-indigo rounded-full px-3 py-1"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await removeFriendRequest(rel.id);
+                      await load();
+                    }}
+                    className="font-mono text-[11px] text-coral border border-coral/40 rounded-full px-3 py-1"
+                  >
+                    Decline
+                  </button>
+                </div>
+              )}
+
+              {rel?.status === "accepted" && (
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] text-sage">Friends ✓</span>
+                  <button
+                    onClick={async () => {
+                      await removeFriendRequest(rel.id);
+                      await load();
+                    }}
+                    className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
