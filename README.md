@@ -32,8 +32,16 @@ in environment variables.
    Supabase client adds its own paths, so a URL that already ends in
    `/rest/v1/` breaks every request the app makes — including login. This is
    the single most common reason login silently fails.
-5. Login runs via magic link (email) — that's on by default in Supabase, you
-   don't need to change anything.
+5. The login page offers two ways in: a magic link (email, no password —
+   on by default, nothing to change) or a classic email+password sign
+   up/log in. For the password option, go to **Authentication → Sign In /
+   Providers → Email** and consider turning **"Confirm email" off**: with it
+   off, signing up with a password logs you in immediately with no email
+   round-trip at all — handy for creating throwaway test accounts (even
+   with made-up addresses, since no email is ever sent for them) when you
+   want to sign in as multiple people. Leave it on for a more standard,
+   production-like setup. This toggle doesn't affect the magic-link flow,
+   which is its own confirmation step either way.
 6. **If you already ran an earlier version of `schema.sql`**, also run, in
    this order (same SQL editor):
    - `sql/migration_edit_delete_location.sql` — adds the optional `location`

@@ -1,17 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [mode, setMode] = useState("magic");
+  const [authAction, setAuthAction] = useState("login");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [sent, setSent] = useState(false);
+  const [confirmPending, setConfirmPending] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const resetMessages = () => {
     setError("");
+    setSent(false);
+    setConfirmPending(false);
+  };
+
+  const switchMode = (m) => {
+    setMode(m);
+    resetMessages();
+  };
+
+  const switchAuthAction = (a) => {
+    setAuthAction(a);
+    resetMessages();
+  };
+
+  const handleMagicSubmit = async (e) => {
+    e.preventDefault();
+    resetMessages();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -23,42 +45,140 @@ export default function LoginPage() {
     else setSent(true);
   };
 
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    resetMessages();
+    if (authAction === "signup") {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name: name || email.split("@")[0] } },
+      });
+      if (error) setError(error.message);
+      else if (data.session) router.replace("/");
+      else setConfirmPending(true);
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
+      else router.replace("/");
+    }
+  };
+
+  const chip = (active) =>
+    `font-display text-[13px] font-semibold px-3.5 py-1.5 rounded-full border cursor-pointer ${
+      active ? "border-indigo bg-indigo/10 text-indigo" : "border-border bg-white text-inksoft"
+    }`;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm bg-white border border-border rounded-2xl p-8">
         <h1 className="font-display font-bold text-2xl mb-1">Extro: Activities Feed</h1>
-        <p className="text-inksoft text-sm mb-6 font-body">
-          Sign up with your email address—you&apos;ll receive a login link; no password is required.
+        <p className="text-inksoft text-sm mb-4 font-body">
+          Sign in with a magic link (no password), or use a password if you
+          prefer.
         </p>
-        {sent ? (
-          <p className="font-body text-sm text-sage">
-            Link sent! Check your inbox ({email}) and click the link.
-          </p>
+
+        <div className="flex gap-2 mb-4">
+          <button type="button" className={chip(mode === "magic")} onClick={() => switchMode("magic")}>
+            Magic Link
+          </button>
+          <button type="button" className={chip(mode === "password")} onClick={() => switchMode("password")}>
+            Password
+          </button>
+        </div>
+
+        {mode === "magic" ? (
+          sent ? (
+            <p className="font-body text-sm text-sage">
+              Link sent! Check your inbox ({email}) and click the link.
+            </p>
+          ) : (
+            <form onSubmit={handleMagicSubmit} className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+              />
+              <input
+                type="email"
+                required
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+              />
+              <button
+                type="submit"
+                className="bg-ink text-white font-display font-semibold rounded-full px-4 py-2 text-sm mt-2"
+              >
+                Send Login Link
+              </button>
+              {error && <p className="text-coral text-xs font-body">{error}</p>}
+            </form>
+          )
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
-            />
-            <input
-              type="email"
-              required
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
-            />
-            <button
-              type="submit"
-              className="bg-ink text-white font-display font-semibold rounded-full px-4 py-2 text-sm mt-2"
-            >
-              Send Login Link
-            </button>
-            {error && <p className="text-coral text-xs font-body">{error}</p>}
-          </form>
+          <>
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                className={chip(authAction === "login")}
+                onClick={() => switchAuthAction("login")}
+              >
+                Log In
+              </button>
+              <button
+                type="button"
+                className={chip(authAction === "signup")}
+                onClick={() => switchAuthAction("signup")}
+              >
+                Sign Up
+              </button>
+            </div>
+            {confirmPending ? (
+              <p className="font-body text-sm text-sage">
+                Almost there — check your inbox ({email}) to confirm your
+                account, then log in with your password.
+              </p>
+            ) : (
+              <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-3">
+                {authAction === "signup" && (
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+                  />
+                )}
+                <input
+                  type="email"
+                  required
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+                />
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+                />
+                <button
+                  type="submit"
+                  className="bg-ink text-white font-display font-semibold rounded-full px-4 py-2 text-sm mt-2"
+                >
+                  {authAction === "signup" ? "Create Account" : "Log In"}
+                </button>
+                {error && <p className="text-coral text-xs font-body">{error}</p>}
+              </form>
+            )}
+          </>
         )}
       </div>
     </div>
