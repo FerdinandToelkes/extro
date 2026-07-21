@@ -78,8 +78,13 @@ in environment variables.
    - `sql/migration_profile_fields.sql` — adds optional `city` and `bio`
      fields to your profile, editable on the new Profile page. City doubles
      as a feed filter ("same city as me").
+   - `sql/migration_expiry_hours.sql` — switches auto-delete timing from
+     days to hours (renames the column and multiplies existing values by
+     24, so nothing already posted changes its actual delete time) and
+     adds an optional exact event date/time (Advanced settings in the
+     activity form) that overrides the fuzzy When-chip-based calculation.
 
-   On a brand-new project you can skip all eight (the sixth is a hotfix,
+   On a brand-new project you can skip all nine (the sixth is a hotfix,
    not needed at all on a fresh project) — the full `schema.sql` already
    includes the correct version of those changes (`schema.sql` itself also
    enables `pg_cron` the same way, so the note above applies there too).

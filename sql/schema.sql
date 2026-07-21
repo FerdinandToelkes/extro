@@ -55,9 +55,13 @@ create table activities (
   -- Optional free-browsing tags, separate from `category` -- purely for
   -- discovery/filtering, not used by overlap detection or merge matching.
   tags text[] not null default '{}',
-  -- How many days after the event this activity auto-deletes (see the
+  -- Optional exact event moment (advanced setting) -- when set, overrides
+  -- the fuzzy When-chip-based midnight calculation for expiry purposes.
+  -- The When chip itself is unaffected and still drives display/matching.
+  event_at timestamptz,
+  -- How many hours after the event this activity auto-deletes (see the
   -- cron job below); expires_at is computed client-side at create/edit time.
-  expire_after_days integer not null default 1 check (expire_after_days >= 0),
+  expire_after_hours integer not null default 24 check (expire_after_hours >= 0),
   expires_at timestamptz,
   created_at timestamptz default now()
 );
@@ -119,7 +123,7 @@ create function public.merge_activities(
   p_category text,
   p_timeframe text,
   p_location text,
-  p_expire_after_days integer,
+  p_expire_after_hours integer,
   p_expires_at timestamptz,
   p_circle_ids uuid[],
   p_people_ids uuid[],
@@ -155,8 +159,8 @@ begin
     raise exception 'not a participant in any source activity';
   end if;
 
-  insert into activities (author_id, text, category, timeframe, location, expire_after_days, expires_at, tags)
-  values (v_caller, p_text, p_category, p_timeframe, p_location, p_expire_after_days, p_expires_at, p_tags)
+  insert into activities (author_id, text, category, timeframe, location, expire_after_hours, expires_at, tags)
+  values (v_caller, p_text, p_category, p_timeframe, p_location, p_expire_after_hours, p_expires_at, p_tags)
   returning * into v_new;
 
   insert into activity_visibility_circles (activity_id, circle_id)

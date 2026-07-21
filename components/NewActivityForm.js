@@ -6,6 +6,14 @@ const TIMEFRAMES = ["Today", "Tomorrow", "Weekend"];
 const CATEGORIES = ["Sport", "Café", "Culture", "Leisure", "Food", "Other"];
 const TAGS = ["Outdoors", "Games", "Music", "Fitness", "Coffee", "Nightlife", "Learning", "Chill"];
 
+// Formats an ISO timestamp for an <input type="datetime-local"> value
+// (YYYY-MM-DDTHH:mm, in the browser's local time, no seconds/timezone).
+function toDatetimeLocal(iso) {
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function NewActivityForm({
   circles,
   profiles,
@@ -22,7 +30,9 @@ export default function NewActivityForm({
   const [category, setCategory] = useState(initial?.category ?? CATEGORIES[0]);
   const [timeframe, setTimeframe] = useState(initial?.timeframe ?? TIMEFRAMES[0]);
   const [location, setLocation] = useState(initial?.location ?? "");
-  const [expireAfterDays, setExpireAfterDays] = useState(initial?.expireAfterDays ?? 1);
+  const [expireAfterHours, setExpireAfterHours] = useState(initial?.expireAfterHours ?? 24);
+  const [eventAt, setEventAt] = useState(initial?.eventAt ? toDatetimeLocal(initial.eventAt) : "");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [tags, setTags] = useState(initial?.tags ?? []);
   const [visType, setVisType] = useState(
     initial?.visiblePeopleIds?.length ? "people" : "circle"
@@ -45,7 +55,8 @@ export default function NewActivityForm({
         category,
         timeframe,
         location: location.trim(),
-        expireAfterDays,
+        expireAfterHours,
+        eventAt: eventAt ? new Date(eventAt).toISOString() : null,
         tags,
         circleIds: visType === "circle" ? selectedCircles : [],
         peopleIds: visType === "people" ? selectedPeople : [],
@@ -120,19 +131,48 @@ export default function NewActivityForm({
         className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm mb-4 outline-none"
       />
 
-      <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-        Auto-delete{" "}
-        <span className="normal-case tracking-normal text-gray-400">
-          (days after the event)
-        </span>
-      </label>
-      <input
-        type="number"
-        min={0}
-        value={expireAfterDays}
-        onChange={(e) => setExpireAfterDays(Math.max(0, Number(e.target.value) || 0))}
-        className="w-20 border border-border rounded-lg px-3 py-2 font-body text-sm mb-4 outline-none"
-      />
+      <button
+        type="button"
+        onClick={() => setAdvancedOpen((o) => !o)}
+        className="font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5 flex items-center gap-1"
+      >
+        <span>{advancedOpen ? "▾" : "▸"}</span> Advanced settings
+      </button>
+
+      {advancedOpen && (
+        <div className="border border-border rounded-lg p-3 mb-4 flex flex-col gap-3">
+          <div>
+            <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
+              Exact date &amp; time{" "}
+              <span className="normal-case tracking-normal text-gray-400">
+                (optional — overrides the When chip for auto-delete timing)
+              </span>
+            </label>
+            <input
+              type="datetime-local"
+              value={eventAt}
+              onChange={(e) => setEventAt(e.target.value)}
+              className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
+              Auto-delete{" "}
+              <span className="normal-case tracking-normal text-gray-400">
+                (hours after the event)
+              </span>
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={expireAfterHours}
+              onChange={(e) => setExpireAfterHours(Math.max(0, Number(e.target.value) || 0))}
+              className="w-24 border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+            />
+          </div>
+        </div>
+      )}
 
       <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
         Visible to

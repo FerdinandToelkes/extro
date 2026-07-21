@@ -199,7 +199,8 @@ export default function FeedPage() {
     category,
     timeframe,
     location,
-    expireAfterDays,
+    expireAfterHours,
+    eventAt,
     tags,
     circleIds,
     peopleIds,
@@ -212,7 +213,8 @@ export default function FeedPage() {
         category,
         timeframe,
         location,
-        expireAfterDays,
+        expireAfterHours,
+        eventAt,
         tags,
         circleIds,
         peopleIds,
@@ -229,7 +231,8 @@ export default function FeedPage() {
     category,
     timeframe,
     location,
-    expireAfterDays,
+    expireAfterHours,
+    eventAt,
     tags,
     circleIds,
     peopleIds,
@@ -242,7 +245,8 @@ export default function FeedPage() {
         category,
         timeframe,
         location,
-        expireAfterDays,
+        expireAfterHours,
+        eventAt,
         tags,
         circleIds,
         peopleIds,
@@ -283,7 +287,7 @@ export default function FeedPage() {
         category: group[0].category,
         timeframe: group[0].timeframe,
         location: group.find((a) => a.location)?.location || "",
-        expireAfterDays: group[0].expireAfterDays,
+        expireAfterHours: group[0].expireAfterHours,
         tags: [...new Set(group.flatMap((a) => a.tags))],
         circleIds,
         peopleIds,
@@ -403,7 +407,7 @@ export default function FeedPage() {
         ) : (
           <button
             onClick={() => setShowForm(true)}
-            className="w-full text-left font-body text-[14.5px] text-gray-400 bg-white border border-dashed border-gray-300 rounded-2xl px-4.5 py-3.5 mb-5"
+            className="w-full text-center font-body text-[14.5px] text-gray-400 bg-white border border-dashed border-gray-300 rounded-2xl px-4.5 py-3.5 mb-5"
           >
             + Create New Activity
           </button>
