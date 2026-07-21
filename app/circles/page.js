@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   getCurrentProfile,
-  listAllProfiles,
+  listProfilesByIds,
   listCirclesWithMembers,
   listFriendRequests,
   createCircle,
@@ -28,9 +28,11 @@ export default function CirclesPage() {
       return;
     }
     setMe(profile);
-    setProfiles(await listAllProfiles());
+    const reqs = await listFriendRequests();
+    setRequests(reqs);
+    const friendIds = reqs.filter((r) => r.status === "accepted").map((r) => r.otherId);
+    setProfiles(await listProfilesByIds(friendIds));
     setCircles(await listCirclesWithMembers());
-    setRequests(await listFriendRequests());
     setLoading(false);
   };
 
@@ -54,8 +56,6 @@ export default function CirclesPage() {
 
   if (loading) return null;
 
-  const friendIds = requests.filter((r) => r.status === "accepted").map((r) => r.otherId);
-
   return (
     <div className="min-h-screen bg-bg font-body">
       <div className="max-w-[620px] mx-auto px-4 pt-7 pb-16">
@@ -77,25 +77,23 @@ export default function CirclesPage() {
             className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm mb-3 outline-none"
           />
           <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-            Members ({friendIds.length} available)
+            Members ({profiles.length} available)
           </label>
           <div className="flex gap-2 flex-wrap mb-4">
-            {profiles
-              .filter((p) => friendIds.includes(p.id))
-              .map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => toggle(p.id)}
-                  className={`font-display text-[13px] font-semibold px-3.5 py-1.5 rounded-full border ${
-                    selected.includes(p.id)
-                      ? "border-indigo bg-indigo/10 text-indigo"
-                      : "border-border bg-white text-inksoft"
-                  }`}
-                >
-                  {p.name}
-                </button>
-              ))}
-            {friendIds.length === 0 && (
+            {profiles.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => toggle(p.id)}
+                className={`font-display text-[13px] font-semibold px-3.5 py-1.5 rounded-full border ${
+                  selected.includes(p.id)
+                    ? "border-indigo bg-indigo/10 text-indigo"
+                    : "border-border bg-white text-inksoft"
+                }`}
+              >
+                {p.name}
+              </button>
+            ))}
+            {profiles.length === 0 && (
               <span className="text-[13px] text-gray-400">
                 No friends yet —{" "}
                 <Link href="/friends" className="text-indigo">

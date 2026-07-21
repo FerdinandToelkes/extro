@@ -7,6 +7,7 @@ import {
   getCurrentProfile,
   getProfileById,
   listFriendRequests,
+  listFriendsOf,
   sendFriendRequest,
   acceptFriendRequest,
   removeFriendRequest,
@@ -20,6 +21,7 @@ export default function ViewProfilePage() {
   const [me, setMe] = useState(null);
   const [profile, setProfile] = useState(null);
   const [rel, setRel] = useState(null);
+  const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -35,7 +37,9 @@ export default function ViewProfilePage() {
     setMe(meProfile);
     const [target, requests] = await Promise.all([getProfileById(id), listFriendRequests()]);
     setProfile(target);
-    setRel(requests.find((r) => r.otherId === id) ?? null);
+    const foundRel = requests.find((r) => r.otherId === id) ?? null;
+    setRel(foundRel);
+    setFriends(foundRel?.status === "accepted" ? await listFriendsOf(id) : []);
     setLoading(false);
   };
 
@@ -74,6 +78,9 @@ export default function ViewProfilePage() {
           <Avatar profile={profile} size={56} />
           <div className="flex-1 min-w-0">
             <h1 className="font-display font-bold text-xl text-ink">{profile.name}</h1>
+            {profile.username && (
+              <div className="font-mono text-[11px] text-gray-400">@{profile.username}</div>
+            )}
             {profile.city && (
               <div className="font-mono text-[11.5px] text-inksoft mt-1">📍 {profile.city}</div>
             )}
@@ -146,6 +153,33 @@ export default function ViewProfilePage() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="bg-white border border-border rounded-2xl p-5 mt-4">
+          <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-2">
+            Friends
+          </label>
+          {rel?.status === "accepted" ? (
+            friends.length === 0 ? (
+              <span className="text-[13px] text-gray-400">No friends yet.</span>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {friends.map((f) => (
+                  <Link
+                    key={f.id}
+                    href={`/profile/${f.id}`}
+                    className="font-display text-[13px] font-semibold text-ink border border-border rounded-full px-3 py-1 hover:underline"
+                  >
+                    {f.name}
+                  </Link>
+                ))}
+              </div>
+            )
+          ) : (
+            <span className="text-[13px] text-gray-400">
+              Become friends with {profile.name} to see their friends.
+            </span>
+          )}
         </div>
       </div>
     </div>

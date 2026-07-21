@@ -12,6 +12,10 @@ create table profiles (
   -- bio is just a short display tagline, not used anywhere else yet.
   city text,
   bio text,
+  -- Unique, lowercase handle -- required at signup going forward, the only
+  -- way to find someone to friend (no directory browsing). NULL is allowed
+  -- for accounts that predate this column.
+  username text unique check (username ~ '^[a-z0-9_]{3,20}$'),
   created_at timestamptz default now()
 );
 
@@ -98,11 +102,12 @@ create table activity_messages (
 create function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, name, avatar_initials)
+  insert into public.profiles (id, name, avatar_initials, username)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
-    upper(left(coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)), 2))
+    upper(left(coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)), 2)),
+    nullif(lower(new.raw_user_meta_data->>'username'), '')
   );
   return new;
 end;
@@ -111,6 +116,80 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Lets an unauthenticated signup form (and the profile-edit form) check
+-- whether a username is free before submitting. Returns only a boolean --
+-- never exposes any profile data. security definer so it can run for the
+-- anon role (no session exists yet during signup).
+create function public.is_username_available(p_username text, p_exclude_id uuid default null)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select not exists (
+    select 1 from profiles
+    where username = lower(p_username)
+      and (p_exclude_id is null or id <> p_exclude_id)
+  );
+$$;
+
+grant execute on function public.is_username_available(text, uuid) to anon, authenticated;
+
+-- Returns a friend's accepted friends -- but only if the caller is
+-- themselves an accepted friend of that person (or it's their own id).
+-- This intentionally does NOT extend "friend_requests: select own" to
+-- cover this case, because that policy would need to query
+-- friend_requests from within its own select policy to decide -- the
+-- exact self-referential shape that causes "infinite recursion detected
+-- in policy" (a table's RLS policy querying that same table triggers the
+-- policy again, recursively; Postgres detects the cycle and refuses,
+-- regardless of whether it's one table referencing itself or several
+-- tables referencing each other). Keeping this as a separate, narrowly
+-- scoped security-definer function avoids touching that policy at all.
+create function public.list_friends_of(p_target_id uuid)
+returns table (id uuid, name text, avatar_initials text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller uuid := auth.uid();
+  v_authorized boolean;
+begin
+  if v_caller is null then
+    raise exception 'not authenticated';
+  end if;
+
+  if v_caller = p_target_id then
+    v_authorized := true;
+  else
+    select exists (
+      select 1 from friend_requests
+      where status = 'accepted'
+        and ((requester_id = v_caller and addressee_id = p_target_id)
+          or (requester_id = p_target_id and addressee_id = v_caller))
+    ) into v_authorized;
+  end if;
+
+  if not v_authorized then
+    return;
+  end if;
+
+  return query
+    select p.id, p.name, p.avatar_initials
+    from profiles p
+    where p.id in (
+      select case when fr.requester_id = p_target_id then fr.addressee_id else fr.requester_id end
+      from friend_requests fr
+      where fr.status = 'accepted'
+        and (fr.requester_id = p_target_id or fr.addressee_id = p_target_id)
+    );
+end;
+$$;
+
+grant execute on function public.list_friends_of(uuid) to authenticated;
 
 -- Merge overlapping activities from different authors into one, carrying
 -- over everyone's existing responses. Runs as security definer because the

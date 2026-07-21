@@ -83,8 +83,13 @@ in environment variables.
      24, so nothing already posted changes its actual delete time) and
      adds an optional exact event date/time (Advanced settings in the
      activity form) that overrides the fuzzy When-chip-based calculation.
+   - `sql/migration_usernames.sql` — adds a unique, required-at-signup
+     username (existing accounts keep it blank until set via Profile).
+     Friend-adding is now exact-username search only — the Friends page no
+     longer lists everyone. Also adds the function behind "see a friend's
+     friends" on their profile page.
 
-   On a brand-new project you can skip all nine (the sixth is a hotfix,
+   On a brand-new project you can skip all ten (the sixth is a hotfix,
    not needed at all on a fresh project) — the full `schema.sql` already
    includes the correct version of those changes (`schema.sql` itself also
    enables `pg_cron` the same way, so the note above applies there too).

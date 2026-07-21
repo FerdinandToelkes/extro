@@ -5,10 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentProfile, updateMyProfile } from "../../lib/queries";
 
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+const USERNAME_HINT = "3-20 characters: lowercase letters, numbers, underscore.";
+
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
@@ -23,6 +27,7 @@ export default function ProfilePage() {
         return;
       }
       setName(profile.name ?? "");
+      setUsername(profile.username ?? "");
       setCity(profile.city ?? "");
       setBio(profile.bio ?? "");
       setLoading(false);
@@ -31,11 +36,21 @@ export default function ProfilePage() {
 
   const submit = async () => {
     if (!name.trim() || saving) return;
+    const normalizedUsername = username.trim().toLowerCase();
+    if (normalizedUsername && !USERNAME_RE.test(normalizedUsername)) {
+      setError(`Username: ${USERNAME_HINT}`);
+      return;
+    }
     setSaving(true);
     setSaved(false);
     setError("");
     try {
-      await updateMyProfile({ name: name.trim(), city: city.trim(), bio: bio.trim() });
+      await updateMyProfile({
+        name: name.trim(),
+        username: normalizedUsername,
+        city: city.trim(),
+        bio: bio.trim(),
+      });
       setSaved(true);
     } catch (err) {
       setError(err.message || String(err));
@@ -64,6 +79,22 @@ export default function ProfilePage() {
               onChange={(e) => setName(e.target.value)}
               className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
             />
+          </div>
+
+          <div>
+            <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
+              Username{" "}
+              <span className="normal-case tracking-normal text-gray-400">
+                (unique — the only way friends can find you to add you)
+              </span>
+            </label>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="e.g., alice_b"
+              className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+            />
+            <p className="text-[11px] text-gray-400 font-mono mt-1">{USERNAME_HINT}</p>
           </div>
 
           <div>
