@@ -136,19 +136,18 @@ your other tabs too. To have several people logged in at once:
   server (`npm run dev -- -p 3001`) and open `localhost:3000` and
   `localhost:3001` as two plain tabs, each with its own login. Doesn't work
   against the deployed Vercel URL, since that's a single fixed domain.
-- **Browser profiles** (Chrome/Edge: profile icon → "Add profile"; Firefox:
-  `about:profiles`) give each account a fully separate, persistent sandbox —
-  works locally and against the deployed link, and scales to as many
-  accounts as you want.
-- **Firefox Multi-Account Containers** (extension) does the same thing but
-  as tabs inside one normal window/profile — drag any tab into its own
-  window if you want two side by side.
+- **Different browsers.** Each browser (Chrome, Firefox, Safari, Edge, …)
+  keeps its own storage, so signing in as a different person in each one
+  gives every account its own persistent, isolated session — works locally
+  and against the deployed link, and scales to as many accounts as you have
+  browsers.
 
 Password sign-up with "Confirm email" off (step 1.5) makes creating these
 test accounts instant, even with made-up email addresses.
 
 **Or skip creating accounts by hand:** `npm run seed:test-users` creates
-three mock accounts (Alice/Bob/Carol, password `testpass123`), friends them
+three mock accounts — `mock-alice@extro.test`, `mock-bob@extro.test`, and
+`mock-carol@extro.test`, all with password `testpass123` — friends them
 with each other, shares a "Mock Squad" circle, and posts two overlapping
 Sport/Today activities — so there's an overlap banner ready to test Merge
 on immediately after it runs. Safe to re-run, though it'll add a fresh
