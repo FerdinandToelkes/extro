@@ -16,12 +16,15 @@ import {
   deleteActivity,
   setActivityResponse,
   sendMessage,
+  setMyAvailability,
+  clearMyAvailability,
   subscribeToActivityChanges,
   subscribeToFriendRequests,
 } from "../lib/queries";
 import ActivityCard from "../components/ActivityCard";
 import OverlapBanner from "../components/OverlapBanner";
 import NewActivityForm from "../components/NewActivityForm";
+import AvailabilityBar from "../components/AvailabilityBar";
 
 function isVisibleToMe(activity, meId, circles) {
   if (activity.authorId === meId) return true;
@@ -173,6 +176,10 @@ export default function FeedPage() {
     () => friendRequests.filter((r) => r.status === "pending" && r.direction === "incoming").length,
     [friendRequests]
   );
+  const friendsForAvailability = useMemo(
+    () => profiles.filter((p) => friendIds.includes(p.id)),
+    [profiles, friendIds]
+  );
 
   const handleRespond = async (activityId, status) => {
     setError("");
@@ -316,6 +323,26 @@ export default function FeedPage() {
     router.replace("/login");
   };
 
+  const handleShareAvailability = async (day, timeOfDay) => {
+    setError("");
+    try {
+      await setMyAvailability(day, timeOfDay);
+      await loadAll();
+    } catch (err) {
+      setError(err.message || String(err));
+    }
+  };
+
+  const handleClearAvailability = async () => {
+    setError("");
+    try {
+      await clearMyAvailability();
+      await loadAll();
+    } catch (err) {
+      setError(err.message || String(err));
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg font-body text-inksoft">
@@ -352,6 +379,13 @@ export default function FeedPage() {
             </button>
           </div>
         )}
+
+        <AvailabilityBar
+          me={me}
+          friends={friendsForAvailability}
+          onShare={handleShareAvailability}
+          onClear={handleClearAvailability}
+        />
 
         <div className="flex gap-2 mb-5 flex-wrap">
           {circles.map((c) => (

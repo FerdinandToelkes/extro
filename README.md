@@ -88,8 +88,10 @@ in environment variables.
      Friend-adding is now exact-username search only — the Friends page no
      longer lists everyone. Also adds the function behind "see a friend's
      friends" on their profile page.
+   - `sql/migration_availability.sql` — adds "I'm generally free" status
+     sharing (visible to your friends, shown on the feed and on profiles).
 
-   On a brand-new project you can skip all ten (the sixth is a hotfix,
+   On a brand-new project you can skip all eleven (the sixth is a hotfix,
    not needed at all on a fresh project) — the full `schema.sql` already
    includes the correct version of those changes (`schema.sql` itself also
    enables `pg_cron` the same way, so the note above applies there too).

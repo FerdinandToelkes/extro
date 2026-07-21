@@ -16,6 +16,13 @@ create table profiles (
   -- way to find someone to friend (no directory browsing). NULL is allowed
   -- for accounts that predate this column.
   username text unique check (username ~ '^[a-z0-9_]{3,20}$'),
+  -- Current "I'm generally free" status (a single status, not a log --
+  -- setting a new one replaces the old). available_until is checked
+  -- client-side to decide whether it's still active; no cron needed since
+  -- there's no row to delete, just a stale value that stops being shown.
+  available_day text,
+  available_time_of_day text,
+  available_until timestamptz,
   created_at timestamptz default now()
 );
 
