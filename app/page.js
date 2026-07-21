@@ -13,7 +13,7 @@ import {
   createActivity,
   updateActivity,
   deleteActivity,
-  toggleJoin,
+  setActivityResponse,
   sendMessage,
   subscribeToActivityChanges,
   subscribeToFriendRequests,
@@ -124,8 +124,8 @@ export default function FeedPage() {
     [friendRequests]
   );
 
-  const handleJoin = async (activityId, currentlyJoined) => {
-    await toggleJoin(activityId, me.id, currentlyJoined);
+  const handleRespond = async (activityId, status) => {
+    await setActivityResponse(activityId, me.id, status);
     await loadAll();
   };
 
@@ -309,7 +309,7 @@ export default function FeedPage() {
             profilesById={profilesById}
             circlesById={circlesById}
             meId={me.id}
-            onJoin={handleJoin}
+            onRespond={handleRespond}
             onSendMessage={handleSendMessage}
             onEdit={handleEdit}
             onDelete={handleDelete}

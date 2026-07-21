@@ -70,6 +70,7 @@ create table activity_visibility_people (
 create table activity_joins (
   activity_id uuid references activities(id) on delete cascade,
   person_id uuid references profiles(id) on delete cascade,
+  status text not null default 'joined' check (status in ('joined', 'interested', 'maybe')),
   joined_at timestamptz default now(),
   primary key (activity_id, person_id)
 );
@@ -168,6 +169,7 @@ create policy "vis_people: delete own activity" on activity_visibility_people fo
 
 create policy "joins: select all" on activity_joins for select to authenticated using (true);
 create policy "joins: insert own" on activity_joins for insert to authenticated with check (auth.uid() = person_id);
+create policy "joins: update own" on activity_joins for update to authenticated using (auth.uid() = person_id) with check (auth.uid() = person_id);
 create policy "joins: delete own" on activity_joins for delete to authenticated using (auth.uid() = person_id);
 
 create policy "messages: select all" on activity_messages for select to authenticated using (true);

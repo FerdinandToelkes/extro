@@ -9,12 +9,18 @@ const TIMEFRAME_COLOR = {
   Weekend: "#4B4ECF",
 };
 
+const RESPONSES = [
+  { status: "joined", label: "I'm in", activeLabel: "Joined ✓" },
+  { status: "interested", label: "Interested", activeLabel: "Interested ✓" },
+  { status: "maybe", label: "Maybe", activeLabel: "Maybe ✓" },
+];
+
 export default function ActivityCard({
   activity,
   profilesById,
   circlesById,
   meId,
-  onJoin,
+  onRespond,
   onSendMessage,
   onEdit,
   onDelete,
@@ -22,8 +28,13 @@ export default function ActivityCard({
   const [chatOpen, setChatOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const color = TIMEFRAME_COLOR[activity.timeframe] || "#4B4ECF";
-  const hasJoined = activity.joined.includes(meId);
-  const chatActive = activity.joined.length >= 2;
+  const joinedIds = activity.responses.filter((r) => r.status === "joined").map((r) => r.personId);
+  const interestedIds = activity.responses
+    .filter((r) => r.status === "interested")
+    .map((r) => r.personId);
+  const maybeIds = activity.responses.filter((r) => r.status === "maybe").map((r) => r.personId);
+  const myResponse = activity.responses.find((r) => r.personId === meId)?.status;
+  const chatActive = joinedIds.length + interestedIds.length >= 2;
   const author = profilesById[activity.authorId];
   const isMine = activity.authorId === meId;
 
@@ -113,9 +124,9 @@ export default function ActivityCard({
             </div>
           )}
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap mb-2">
             <div className="flex mr-1">
-              {activity.joined.map((uid, i) =>
+              {joinedIds.map((uid, i) =>
                 profilesById[uid] ? (
                   <div key={uid} style={{ marginLeft: i === 0 ? 0 : -8 }}>
                     <Avatar profile={profilesById[uid]} size={26} />
@@ -124,22 +135,36 @@ export default function ActivityCard({
               )}
             </div>
             <span className="font-mono text-xs text-inksoft">
-              {activity.joined.length} joined
+              {joinedIds.length} joined
+              {interestedIds.length > 0 ? ` · ${interestedIds.length} interested` : ""}
+              {maybeIds.length > 0 ? ` · ${maybeIds.length} maybe` : ""}
             </span>
+          </div>
 
-            <button
-              onClick={() => onJoin(activity.id, hasJoined)}
-              className={`ml-auto font-display font-semibold text-[13.5px] px-4 py-1.5 rounded-full ${
-                hasJoined ? "bg-gray-100 text-inksoft" : "bg-indigo text-white"
-              }`}
-            >
-              {hasJoined ? "Joined ✓" : "I'm in"}
-            </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {RESPONSES.map(({ status, label, activeLabel }) => {
+              const active = myResponse === status;
+              return (
+                <button
+                  key={status}
+                  onClick={() => onRespond(activity.id, status)}
+                  className={`font-display font-semibold text-[13.5px] px-3.5 py-1.5 rounded-full ${
+                    active
+                      ? status === "joined"
+                        ? "bg-indigo text-white"
+                        : "bg-gray-100 text-inksoft"
+                      : "border border-border bg-white text-inksoft"
+                  }`}
+                >
+                  {active ? activeLabel : label}
+                </button>
+              );
+            })}
 
             {chatActive && (
               <button
                 onClick={() => setChatOpen((o) => !o)}
-                className="font-display font-semibold text-[13.5px] px-3.5 py-1.5 rounded-full border border-sage/40 bg-sage/10 text-sage-700"
+                className="ml-auto font-display font-semibold text-[13.5px] px-3.5 py-1.5 rounded-full border border-sage/40 bg-sage/10 text-sage-700"
                 style={{ color: "#4C7A55" }}
               >
                 💬 Chat
