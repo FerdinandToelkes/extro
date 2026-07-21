@@ -57,8 +57,16 @@ in environment variables.
      the `create extension pg_cron` line errors with a permissions message,
      enable it first under **Database → Extensions → pg_cron** in the
      dashboard, then re-run just the last two statements of that file.
+   - `sql/migration_merge_activities.sql` — fixes "Merge" on overlapping
+     activities so it actually consolidates them instead of creating a
+     duplicate. **Easy to miss** — it's just a SQL function, nothing to
+     configure, but Merge silently does nothing without it.
+   - `sql/migration_visibility_rls.sql` — enforces activity visibility
+     (circles/individual people) at the database level, not just in the
+     browser. No app behavior changes; this only matters if someone calls
+     the Supabase API directly instead of using the app.
 
-   On a brand-new project you can skip all four — the full `schema.sql`
+   On a brand-new project you can skip all six — the full `schema.sql`
    already includes those changes (`schema.sql` itself also enables
    `pg_cron` the same way, so the note above applies there too).
 

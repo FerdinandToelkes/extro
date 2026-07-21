@@ -231,12 +231,31 @@ create policy "friend_requests: delete own" on friend_requests for delete to aut
   auth.uid() = requester_id or auth.uid() = addressee_id
 );
 
-create policy "activities: select all" on activities for select to authenticated using (true);
+-- Visible only to the author, individually-shared people, or members of a
+-- shared circle -- mirrors isVisibleToMe() in app/page.js, but enforced
+-- here so it can't be bypassed by calling the API directly.
+create policy "activities: select visible" on activities for select to authenticated using (
+  author_id = auth.uid()
+  or exists (
+    select 1 from activity_visibility_people vp
+    where vp.activity_id = activities.id and vp.person_id = auth.uid()
+  )
+  or exists (
+    select 1 from activity_visibility_circles vc
+    join circle_members cm on cm.circle_id = vc.circle_id
+    where vc.activity_id = activities.id and cm.member_id = auth.uid()
+  )
+);
 create policy "activities: insert own" on activities for insert to authenticated with check (auth.uid() = author_id);
 create policy "activities: update own" on activities for update to authenticated using (auth.uid() = author_id) with check (auth.uid() = author_id);
 create policy "activities: delete own" on activities for delete to authenticated using (auth.uid() = author_id);
 
-create policy "vis_circles: select all" on activity_visibility_circles for select to authenticated using (true);
+-- The four tables below just defer to "activities: select visible" above --
+-- the inner select is itself subject to that policy, so a row only exists
+-- here if the underlying activity is visible to the current user.
+create policy "vis_circles: select visible activity" on activity_visibility_circles for select to authenticated using (
+  exists (select 1 from activities a where a.id = activity_visibility_circles.activity_id)
+);
 create policy "vis_circles: insert own activity" on activity_visibility_circles for insert to authenticated with check (
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );
@@ -244,7 +263,9 @@ create policy "vis_circles: delete own activity" on activity_visibility_circles 
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );
 
-create policy "vis_people: select all" on activity_visibility_people for select to authenticated using (true);
+create policy "vis_people: select visible activity" on activity_visibility_people for select to authenticated using (
+  exists (select 1 from activities a where a.id = activity_visibility_people.activity_id)
+);
 create policy "vis_people: insert own activity" on activity_visibility_people for insert to authenticated with check (
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );
@@ -252,12 +273,16 @@ create policy "vis_people: delete own activity" on activity_visibility_people fo
   exists (select 1 from activities a where a.id = activity_id and a.author_id = auth.uid())
 );
 
-create policy "joins: select all" on activity_joins for select to authenticated using (true);
+create policy "joins: select visible activity" on activity_joins for select to authenticated using (
+  exists (select 1 from activities a where a.id = activity_joins.activity_id)
+);
 create policy "joins: insert own" on activity_joins for insert to authenticated with check (auth.uid() = person_id);
 create policy "joins: update own" on activity_joins for update to authenticated using (auth.uid() = person_id) with check (auth.uid() = person_id);
 create policy "joins: delete own" on activity_joins for delete to authenticated using (auth.uid() = person_id);
 
-create policy "messages: select all" on activity_messages for select to authenticated using (true);
+create policy "messages: select visible activity" on activity_messages for select to authenticated using (
+  exists (select 1 from activities a where a.id = activity_messages.activity_id)
+);
 create policy "messages: insert own" on activity_messages for insert to authenticated with check (auth.uid() = author_id);
 
 -- Self-expiring activities: an hourly job permanently deletes activities
