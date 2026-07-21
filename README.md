@@ -72,8 +72,11 @@ in environment variables.
      that migration had a circular policy bug; this fixes it. If you're
      running the migrations fresh/in order, `migration_visibility_rls.sql`
      is already correct and you can skip this one.
+   - `sql/migration_activity_tags.sql` — adds optional interest tags
+     (separate from category) for browsing/filtering the feed, and updates
+     the merge function so tags carry over when activities are merged.
 
-   On a brand-new project you can skip all six (the seventh is a hotfix,
+   On a brand-new project you can skip all seven (the sixth is a hotfix,
    not needed at all on a fresh project) — the full `schema.sql` already
    includes the correct version of those changes (`schema.sql` itself also
    enables `pg_cron` the same way, so the note above applies there too).

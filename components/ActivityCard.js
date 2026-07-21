@@ -78,6 +78,14 @@ export default function ActivityCard({
             >
               {activity.timeframe}
             </span>
+            {activity.tags?.map((t) => (
+              <span
+                key={t}
+                className="font-mono text-[11px] text-indigo bg-indigo/10 border border-indigo/30 rounded-full px-2 py-0.5"
+              >
+                {t}
+              </span>
+            ))}
             {isMine && (
               <span className="ml-auto flex gap-1.5">
                 <button

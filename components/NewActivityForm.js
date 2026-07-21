@@ -4,6 +4,7 @@ import { useState } from "react";
 
 const TIMEFRAMES = ["Today", "Tomorrow", "Weekend"];
 const CATEGORIES = ["Sport", "Café", "Culture", "Leisure", "Food", "Other"];
+const TAGS = ["Outdoors", "Games", "Music", "Fitness", "Coffee", "Nightlife", "Learning", "Chill"];
 
 export default function NewActivityForm({
   circles,
@@ -22,6 +23,7 @@ export default function NewActivityForm({
   const [timeframe, setTimeframe] = useState(initial?.timeframe ?? TIMEFRAMES[0]);
   const [location, setLocation] = useState(initial?.location ?? "");
   const [expireAfterDays, setExpireAfterDays] = useState(initial?.expireAfterDays ?? 1);
+  const [tags, setTags] = useState(initial?.tags ?? []);
   const [visType, setVisType] = useState(
     initial?.visiblePeopleIds?.length ? "people" : "circle"
   );
@@ -44,6 +46,7 @@ export default function NewActivityForm({
         timeframe,
         location: location.trim(),
         expireAfterDays,
+        tags,
         circleIds: visType === "circle" ? selectedCircles : [],
         peopleIds: visType === "people" ? selectedPeople : [],
       });
@@ -89,6 +92,20 @@ export default function NewActivityForm({
         {CATEGORIES.map((c) => (
           <button key={c} className={chip(category === c)} onClick={() => setCategory(c)}>
             {c}
+          </button>
+        ))}
+      </div>
+
+      <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
+        Tags{" "}
+        <span className="normal-case tracking-normal text-gray-400">
+          (optional, for browsing)
+        </span>
+      </label>
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {TAGS.map((t) => (
+          <button key={t} className={chip(tags.includes(t))} onClick={() => toggle(tags, setTags, t)}>
+            {t}
           </button>
         ))}
       </div>

@@ -48,6 +48,9 @@ create table activities (
   category text not null,
   timeframe text not null,
   location text,
+  -- Optional free-browsing tags, separate from `category` -- purely for
+  -- discovery/filtering, not used by overlap detection or merge matching.
+  tags text[] not null default '{}',
   -- How many days after the event this activity auto-deletes (see the
   -- cron job below); expires_at is computed client-side at create/edit time.
   expire_after_days integer not null default 1 check (expire_after_days >= 0),
@@ -115,7 +118,8 @@ create function public.merge_activities(
   p_expire_after_days integer,
   p_expires_at timestamptz,
   p_circle_ids uuid[],
-  p_people_ids uuid[]
+  p_people_ids uuid[],
+  p_tags text[]
 )
 returns activities
 language plpgsql
@@ -147,8 +151,8 @@ begin
     raise exception 'not a participant in any source activity';
   end if;
 
-  insert into activities (author_id, text, category, timeframe, location, expire_after_days, expires_at)
-  values (v_caller, p_text, p_category, p_timeframe, p_location, p_expire_after_days, p_expires_at)
+  insert into activities (author_id, text, category, timeframe, location, expire_after_days, expires_at, tags)
+  values (v_caller, p_text, p_category, p_timeframe, p_location, p_expire_after_days, p_expires_at, p_tags)
   returning * into v_new;
 
   insert into activity_visibility_circles (activity_id, circle_id)
@@ -183,7 +187,7 @@ end;
 $$;
 
 grant execute on function public.merge_activities(
-  uuid[], text, text, text, text, integer, timestamptz, uuid[], uuid[]
+  uuid[], text, text, text, text, integer, timestamptz, uuid[], uuid[], text[]
 ) to authenticated;
 
 -- Enable realtime for live updates

@@ -55,6 +55,7 @@ export default function FeedPage() {
   const [editing, setEditing] = useState(null);
   const [dismissed, setDismissed] = useState([]);
   const [error, setError] = useState("");
+  const [activeTags, setActiveTags] = useState([]);
 
   const loadAll = useCallback(async () => {
     const [profs, circs, acts, reqs] = await Promise.all([
@@ -117,6 +118,22 @@ export default function FeedPage() {
     );
   }, [visibleActivities, dismissed]);
 
+  const allTags = useMemo(
+    () => [...new Set(visibleActivities.flatMap((a) => a.tags))].sort(),
+    [visibleActivities]
+  );
+
+  const filteredActivities = useMemo(
+    () =>
+      activeTags.length === 0
+        ? visibleActivities
+        : visibleActivities.filter((a) => a.tags.some((t) => activeTags.includes(t))),
+    [visibleActivities, activeTags]
+  );
+
+  const toggleActiveTag = (t) =>
+    setActiveTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+
   const mergeCandidates = useMemo(() => {
     if (!editing) return [];
     return visibleActivities.filter(
@@ -163,6 +180,7 @@ export default function FeedPage() {
     timeframe,
     location,
     expireAfterDays,
+    tags,
     circleIds,
     peopleIds,
   }) => {
@@ -175,6 +193,7 @@ export default function FeedPage() {
         timeframe,
         location,
         expireAfterDays,
+        tags,
         circleIds,
         peopleIds,
       });
@@ -191,6 +210,7 @@ export default function FeedPage() {
     timeframe,
     location,
     expireAfterDays,
+    tags,
     circleIds,
     peopleIds,
   }) => {
@@ -203,6 +223,7 @@ export default function FeedPage() {
         timeframe,
         location,
         expireAfterDays,
+        tags,
         circleIds,
         peopleIds,
       });
@@ -243,6 +264,7 @@ export default function FeedPage() {
         timeframe: group[0].timeframe,
         location: group.find((a) => a.location)?.location || "",
         expireAfterDays: group[0].expireAfterDays,
+        tags: [...new Set(group.flatMap((a) => a.tags))],
         circleIds,
         peopleIds,
       });
@@ -284,7 +306,7 @@ export default function FeedPage() {
         <div className="flex justify-between items-start mb-5">
           <div>
             <div className="font-mono text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-              {visibleActivities.length} open activities in your circles
+              {filteredActivities.length} open activities in your circles
             </div>
             <h1 className="font-display font-bold text-[28px] text-ink m-0">
               What are you in the mood for?
@@ -371,7 +393,25 @@ export default function FeedPage() {
           />
         ))}
 
-        {visibleActivities.map((a) => (
+        {allTags.length > 0 && (
+          <div className="flex gap-2 mb-4 flex-wrap">
+            {allTags.map((t) => (
+              <button
+                key={t}
+                onClick={() => toggleActiveTag(t)}
+                className={`font-mono text-[11.5px] rounded-full px-3 py-1 border ${
+                  activeTags.includes(t)
+                    ? "border-indigo bg-indigo/10 text-indigo"
+                    : "border-border bg-white text-inksoft"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {filteredActivities.map((a) => (
           <ActivityCard
             key={a.id}
             activity={a}
