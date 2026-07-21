@@ -11,6 +11,7 @@ import {
   listActivitiesFull,
   listFriendRequests,
   createActivity,
+  mergeActivities,
   updateActivity,
   deleteActivity,
   setActivityResponse,
@@ -194,8 +195,8 @@ export default function FeedPage() {
     const authorNames = [...new Set(group.map((a) => profilesById[a.authorId]?.name))];
     const circleIds = [...new Set(group.flatMap((a) => a.visibleCircleIds))];
     const peopleIds = [...new Set(group.flatMap((a) => a.visiblePeopleIds))];
-    await createActivity({
-      authorId: me.id,
+    await mergeActivities({
+      sourceActivityIds: group.map((a) => a.id),
       text: `${group[0].text} (merged: ${authorNames.join(", ")})`,
       category: group[0].category,
       timeframe: group[0].timeframe,
