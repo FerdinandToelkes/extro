@@ -8,6 +8,7 @@ const CATEGORIES = ["Sport", "Café", "Culture", "Leisure", "Food", "Other"];
 export default function NewActivityForm({
   circles,
   profiles,
+  friendIds,
   meId,
   onCreate,
   onClose,
@@ -25,7 +26,7 @@ export default function NewActivityForm({
   const [selectedPeople, setSelectedPeople] = useState(initial?.visiblePeopleIds ?? []);
   const [submitting, setSubmitting] = useState(false);
 
-  const friends = profiles.filter((p) => p.id !== meId);
+  const friends = profiles.filter((p) => p.id !== meId && friendIds.includes(p.id));
 
   const toggle = (arr, setArr, val) =>
     setArr(arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val]);
@@ -128,6 +129,11 @@ export default function NewActivityForm({
         </div>
       ) : (
         <div className="flex gap-2 mb-4 flex-wrap">
+          {friends.length === 0 && (
+            <span className="text-[13px] text-gray-400 font-body">
+              No friends yet – add some under &quot;Circles&quot;.
+            </span>
+          )}
           {friends.map((f) => (
             <button
               key={f.id}

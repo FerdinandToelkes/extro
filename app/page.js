@@ -9,12 +9,14 @@ import {
   listAllProfiles,
   listCirclesWithMembers,
   listActivitiesFull,
+  listFriendRequests,
   createActivity,
   updateActivity,
   deleteActivity,
   toggleJoin,
   sendMessage,
   subscribeToActivityChanges,
+  subscribeToFriendRequests,
 } from "../lib/queries";
 import ActivityCard from "../components/ActivityCard";
 import OverlapBanner from "../components/OverlapBanner";
@@ -46,20 +48,23 @@ export default function FeedPage() {
   const [profiles, setProfiles] = useState([]);
   const [circles, setCircles] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [friendRequests, setFriendRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [dismissed, setDismissed] = useState([]);
 
   const loadAll = useCallback(async () => {
-    const [profs, circs, acts] = await Promise.all([
+    const [profs, circs, acts, reqs] = await Promise.all([
       listAllProfiles(),
       listCirclesWithMembers(),
       listActivitiesFull(),
+      listFriendRequests(),
     ]);
     setProfiles(profs);
     setCircles(circs);
     setActivities(acts);
+    setFriendRequests(reqs);
   }, []);
 
   useEffect(() => {
@@ -77,12 +82,14 @@ export default function FeedPage() {
       setLoading(false);
     })();
 
-    const unsub = subscribeToActivityChanges(() => loadAll());
+    const unsubActivities = subscribeToActivityChanges(() => loadAll());
+    const unsubFriends = subscribeToFriendRequests(() => loadAll());
     const { data: authSub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) router.replace("/login");
     });
     return () => {
-      unsub();
+      unsubActivities();
+      unsubFriends();
       authSub.subscription.unsubscribe();
     };
   }, [loadAll, router]);
@@ -107,6 +114,15 @@ export default function FeedPage() {
       (g) => !dismissed.includes(g.map((a) => a.id).sort().join("-"))
     );
   }, [visibleActivities, dismissed]);
+
+  const friendIds = useMemo(
+    () => friendRequests.filter((r) => r.status === "accepted").map((r) => r.otherId),
+    [friendRequests]
+  );
+  const incomingRequestCount = useMemo(
+    () => friendRequests.filter((r) => r.status === "pending" && r.direction === "incoming").length,
+    [friendRequests]
+  );
 
   const handleJoin = async (activityId, currentlyJoined) => {
     await toggleJoin(activityId, me.id, currentlyJoined);
@@ -219,7 +235,7 @@ export default function FeedPage() {
             href="/circles"
             className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
           >
-            + Manage Circles
+            + Manage Circles{incomingRequestCount > 0 ? ` · ${incomingRequestCount}` : ""}
           </Link>
         </div>
 
@@ -228,6 +244,7 @@ export default function FeedPage() {
             key={editing.id}
             circles={circles}
             profiles={profiles}
+            friendIds={friendIds}
             meId={me.id}
             initial={editing}
             onCreate={handleUpdate}
@@ -237,6 +254,7 @@ export default function FeedPage() {
           <NewActivityForm
             circles={circles}
             profiles={profiles}
+            friendIds={friendIds}
             meId={me.id}
             onCreate={handleCreate}
             onClose={() => setShowForm(false)}

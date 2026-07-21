@@ -25,6 +25,21 @@ create table circle_members (
   primary key (circle_id, member_id)
 );
 
+-- Friend requests (pending -> accepted; decline/cancel/unfriend just delete the row)
+create table friend_requests (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid references profiles(id) on delete cascade,
+  addressee_id uuid references profiles(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'accepted')),
+  created_at timestamptz default now(),
+  check (requester_id <> addressee_id)
+);
+
+-- One relationship row per pair regardless of who requested whom
+create unique index friend_requests_unique_pair on friend_requests (
+  least(requester_id, addressee_id), greatest(requester_id, addressee_id)
+);
+
 -- Activities
 create table activities (
   id uuid primary key default gen_random_uuid(),
@@ -82,12 +97,13 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- Enable realtime for live updates
-alter publication supabase_realtime add table activities, activity_joins, activity_messages;
+alter publication supabase_realtime add table activities, activity_joins, activity_messages, friend_requests;
 
 -- Row Level Security
 alter table profiles enable row level security;
 alter table circles enable row level security;
 alter table circle_members enable row level security;
+alter table friend_requests enable row level security;
 alter table activities enable row level security;
 alter table activity_visibility_circles enable row level security;
 alter table activity_visibility_people enable row level security;
@@ -108,6 +124,21 @@ create policy "circles: insert own" on circles for insert to authenticated with 
 create policy "circle_members: select all" on circle_members for select to authenticated using (true);
 create policy "circle_members: insert own circle" on circle_members for insert to authenticated with check (
   exists (select 1 from circles c where c.id = circle_id and c.owner_id = auth.uid())
+);
+
+create policy "friend_requests: select own" on friend_requests for select to authenticated using (
+  auth.uid() = requester_id or auth.uid() = addressee_id
+);
+create policy "friend_requests: insert own" on friend_requests for insert to authenticated with check (
+  auth.uid() = requester_id
+);
+create policy "friend_requests: update as addressee" on friend_requests for update to authenticated using (
+  auth.uid() = addressee_id
+) with check (
+  auth.uid() = addressee_id
+);
+create policy "friend_requests: delete own" on friend_requests for delete to authenticated using (
+  auth.uid() = requester_id or auth.uid() = addressee_id
 );
 
 create policy "activities: select all" on activities for select to authenticated using (true);

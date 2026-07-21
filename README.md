@@ -41,9 +41,12 @@ in environment variables.
      activities.
    - `sql/migration_bugfixes.sql` — tightens a couple of overly-permissive
      access rules (see below) and fixes an avatar-initials edge case.
+   - `sql/migration_friend_requests.sql` — adds the friend request/accept
+     flow. Adding someone to a circle, or sharing an activity with them
+     individually, now requires an accepted friend request first.
 
-   On a brand-new project you can skip both — the full `schema.sql` already
-   includes those changes.
+   On a brand-new project you can skip all three — the full `schema.sql`
+   already includes those changes.
 
 ## 2. Test locally (optional, but recommended before going live)
 
