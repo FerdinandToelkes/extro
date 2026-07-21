@@ -80,6 +80,28 @@ npm run dev
 Then open `http://localhost:3000` in your browser, log in with your own email
 (the magic link lands in your inbox), and try it out.
 
+### Testing as multiple people in one browser
+
+Regular tabs/windows share the same login — Supabase keeps your session in
+that site's storage, so signing in as someone else in a new tab logs out
+your other tabs too. To have several people logged in at once:
+
+- **Different ports, no extra tooling (local only).** Storage is isolated
+  per origin, and a port counts as part of the origin — run a second dev
+  server (`npm run dev -- -p 3001`) and open `localhost:3000` and
+  `localhost:3001` as two plain tabs, each with its own login. Doesn't work
+  against the deployed Vercel URL, since that's a single fixed domain.
+- **Browser profiles** (Chrome/Edge: profile icon → "Add profile"; Firefox:
+  `about:profiles`) give each account a fully separate, persistent sandbox —
+  works locally and against the deployed link, and scales to as many
+  accounts as you want.
+- **Firefox Multi-Account Containers** (extension) does the same thing but
+  as tabs inside one normal window/profile — drag any tab into its own
+  window if you want two side by side.
+
+Password sign-up with "Confirm email" off (step 1.5) makes creating these
+test accounts instant, even with made-up email addresses.
+
 ## 3. Push to GitHub
 
 ```bash
@@ -119,9 +141,6 @@ manual re-upload needed.
   records (writing only to their own entries). That's fine for a trusted
   friend circle for testing, but should be tightened before a larger or
   less-trusted group gets access.
-- **"Merge" on overlaps** currently creates a new, combined activity instead
-  of technically merging the original two. That's functionally fine for
-  trying it out, but it's a point we can clean up later.
 - **Friend circles** only consist of people who have already signed up (no
   address-book import). That's enough for the first test run among friends.
 - **Auto-delete timing** is approximate: the "When" chip (Today/Tomorrow/
