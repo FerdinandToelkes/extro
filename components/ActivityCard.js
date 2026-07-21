@@ -36,6 +36,7 @@ export default function ActivityCard({
   const maybeIds = activity.responses.filter((r) => r.status === "maybe").map((r) => r.personId);
   const myResponse = activity.responses.find((r) => r.personId === meId)?.status;
   const chatActive = joinedIds.length + interestedIds.length >= 2;
+  const needsPlan = chatActive && !activity.location && !activity.eventAt;
   const author = profilesById[activity.authorId];
   const isMine = activity.authorId === meId;
 
@@ -133,6 +134,22 @@ export default function ActivityCard({
                 month: "short",
                 day: "numeric",
               })}
+            </div>
+          )}
+
+          {needsPlan && (
+            <div className="flex items-center gap-2 flex-wrap bg-sand/10 border border-sand/40 rounded-lg px-3 py-2 mb-3">
+              <span className="font-body text-[13px] text-ink">
+                🔔 {joinedIds.length + interestedIds.length} people are in — no time or place set yet.
+              </span>
+              {isMine && (
+                <button
+                  onClick={() => onEdit(activity)}
+                  className="ml-auto font-display font-semibold text-[12px] px-3 py-1 rounded-full bg-ink text-white shrink-0"
+                >
+                  Add details
+                </button>
+              )}
             </div>
           )}
 
