@@ -170,10 +170,14 @@ manual re-upload needed.
 
 ## What's intentionally kept simple for testing among friends
 
-- **Access rights (RLS):** Currently all signed-in users may read all
-  records (writing only to their own entries). That's fine for a trusted
-  friend group for testing, but should be tightened before a larger or
-  less-trusted group gets access.
+- **Access rights (RLS):** Visibility is enforced at the database level with
+  Row Level Security, not just in the browser — you only see activities and
+  availability shared with you (all-friends, a group you're in, or you
+  individually), you only see groups you belong to, and notifications are
+  private to their recipient. Writes are limited to your own records, and
+  operations that need to reach beyond that (merging activities, the
+  mutual-friend group rules, deleting your account) go through vetted
+  `security definer` functions rather than broad table access.
 - **Friend groups** only consist of people who have already signed up (no
   address-book import). That's enough for the first test run among friends.
 - **Auto-delete timing** is approximate: the "When" chip (Today/Tomorrow/

@@ -81,8 +81,8 @@ export default function ViewProfilePage() {
             {profile.username && (
               <div className="font-mono text-[11px] text-gray-400">@{profile.username}</div>
             )}
-            {profile.city && (
-              <div className="font-mono text-[11.5px] text-inksoft mt-1">📍 {profile.city}</div>
+            {profile.location_label && (
+              <div className="font-mono text-[11.5px] text-inksoft mt-1">📍 {profile.location_label}</div>
             )}
             {profile.bio && <p className="font-body text-sm text-inksoft mt-2">{profile.bio}</p>}
 

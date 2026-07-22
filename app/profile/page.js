@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentProfile, updateMyProfile, deleteMyAccount } from "../../lib/queries";
 import { TAGS } from "../../lib/tags";
+import LocationPicker from "../../components/LocationPicker";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 const USERNAME_HINT = "3-20 characters: lowercase letters, numbers, underscore.";
@@ -23,7 +24,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
-  const [city, setCity] = useState("");
+  const [locationLabel, setLocationLabel] = useState("");
+  const [locationKey, setLocationKey] = useState("");
   const [bio, setBio] = useState("");
   const [subscribedTags, setSubscribedTags] = useState([]);
   const [usernameChangedAt, setUsernameChangedAt] = useState(null);
@@ -41,7 +43,8 @@ export default function ProfilePage() {
       }
       setName(profile.name ?? "");
       setUsername(profile.username ?? "");
-      setCity(profile.city ?? "");
+      setLocationLabel(profile.location_label ?? "");
+      setLocationKey(profile.location_key ?? "");
       setBio(profile.bio ?? "");
       setSubscribedTags(profile.subscribed_tags ?? []);
       setUsernameChangedAt(profile.username_changed_at ?? null);
@@ -74,7 +77,8 @@ export default function ProfilePage() {
       await updateMyProfile({
         name: name.trim(),
         username: normalizedUsername,
-        city: city.trim(),
+        locationLabel,
+        locationKey,
         bio: bio.trim(),
         subscribedTags,
       });
@@ -162,16 +166,17 @@ export default function ProfilePage() {
 
           <div>
             <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-              City{" "}
+              Location{" "}
               <span className="normal-case tracking-normal text-gray-400">
-                (optional — lets you filter the feed to people in the same city)
+                (optional, city or state — lets you filter the feed to who&apos;s nearby)
               </span>
             </label>
-            <input
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="e.g., Berlin"
-              className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+            <LocationPicker
+              value={locationLabel}
+              onChange={({ label, key }) => {
+                setLocationLabel(label);
+                setLocationKey(key);
+              }}
             />
           </div>
 

@@ -9,27 +9,50 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   // "checking" while we detect the recovery session, then "ready" or "invalid".
   const [status, setStatus] = useState("checking");
+  const [invalidReason, setInvalidReason] = useState("");
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    // supabase-js parses the recovery token from the URL on load and emits a
-    // session. Check for one, and also listen in case it arrives a beat later.
-    (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) setStatus("ready");
-    })();
+    let settled = false;
+    const markInvalid = (reason) => {
+      if (settled) return;
+      settled = true;
+      setInvalidReason(reason || "");
+      setStatus("invalid");
+    };
+    const markReady = () => {
+      if (settled) return;
+      settled = true;
+      setStatus("ready");
+    };
+
+    // Supabase puts an explicit error on the URL (hash for implicit flow,
+    // query for PKCE) when the link is expired or already used — surface it
+    // immediately instead of waiting.
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const query = new URLSearchParams(window.location.search);
+    const urlError = hash.get("error_description") || query.get("error_description")
+      || hash.get("error") || query.get("error");
+    if (urlError) {
+      markInvalid(urlError.replace(/\+/g, " "));
+      return;
+    }
+
+    // supabase-js (detectSessionInUrl) exchanges the recovery token on load
+    // and emits an event; we also poll getSession as a fallback.
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || session) setStatus("ready");
+      if (event === "PASSWORD_RECOVERY" || (session && event === "SIGNED_IN")) markReady();
     });
-    // If no session showed up shortly after load, treat the link as invalid.
-    const timer = setTimeout(() => {
-      setStatus((s) => (s === "checking" ? "invalid" : s));
-    }, 2500);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) markReady();
+    });
+    // Last-resort safety net if the token never resolves (generous, so a slow
+    // network doesn't trip a false "invalid").
+    const timer = setTimeout(() => markInvalid(""), 8000);
+
     return () => {
       sub.subscription.unsubscribe();
       clearTimeout(timer);
@@ -69,6 +92,9 @@ export default function ResetPasswordPage() {
               This reset link is invalid or has expired. Request a new one from the
               login page.
             </p>
+            {invalidReason && (
+              <p className="text-gray-400 text-[11px] font-mono mt-1">{invalidReason}</p>
+            )}
             <Link
               href="/login"
               className="inline-block mt-4 font-mono text-[11px] text-indigo border border-indigo/40 rounded-full px-3 py-1"

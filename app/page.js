@@ -48,9 +48,6 @@ function findOverlaps(activities) {
   );
 }
 
-function normalizeCity(city) {
-  return (city || "").trim().toLowerCase();
-}
 
 export default function FeedPage() {
   const router = useRouter();
@@ -66,7 +63,7 @@ export default function FeedPage() {
   const [error, setError] = useState("");
   const [activeTags, setActiveTags] = useState([]);
   const [activeCategories, setActiveCategories] = useState([]);
-  const [sameCityOnly, setSameCityOnly] = useState(false);
+  const [nearbyOnly, setNearbyOnly] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
   const loadAll = useCallback(async () => {
@@ -153,13 +150,13 @@ export default function FeedPage() {
       visibleActivities.filter((a) => {
         if (activeCategories.length > 0 && !activeCategories.includes(a.category)) return false;
         if (activeTags.length > 0 && !a.tags.some((t) => activeTags.includes(t))) return false;
-        if (sameCityOnly) {
-          const authorCity = normalizeCity(profilesById[a.authorId]?.city);
-          if (!authorCity || authorCity !== normalizeCity(me?.city)) return false;
+        if (nearbyOnly) {
+          const authorKey = profilesById[a.authorId]?.location_key;
+          if (!authorKey || authorKey !== me?.location_key) return false;
         }
         return true;
       }),
-    [visibleActivities, activeCategories, activeTags, sameCityOnly, profilesById, me]
+    [visibleActivities, activeCategories, activeTags, nearbyOnly, profilesById, me]
   );
 
   const mySubscribedTags = useMemo(() => me?.subscribed_tags ?? [], [me]);
@@ -500,23 +497,23 @@ export default function FeedPage() {
           </div>
         )}
 
-        {me?.city ? (
+        {me?.location_label ? (
           <div className="flex gap-2 mb-4 flex-wrap">
             <button
-              onClick={() => setSameCityOnly((v) => !v)}
+              onClick={() => setNearbyOnly((v) => !v)}
               className={`font-mono text-[11.5px] rounded-full px-3 py-1 border ${
-                sameCityOnly
+                nearbyOnly
                   ? "border-indigo bg-indigo/10 text-indigo"
                   : "border-border bg-white text-inksoft"
               }`}
             >
-              📍 Same city ({me.city})
+              📍 Nearby · {me.location_label}
             </button>
           </div>
         ) : (
           <div className="mb-4">
             <Link href="/profile" className="font-mono text-[11px] text-gray-400">
-              Set your city on your profile to filter by nearby activities.
+              Set your location on your profile to see who&apos;s nearby.
             </Link>
           </div>
         )}
