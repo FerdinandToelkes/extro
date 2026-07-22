@@ -103,15 +103,14 @@ async function main() {
 
   console.log('Creating shared circle "Mock Squad"...');
   const owner = users[0];
-  const { data: circle, error: circleError } = await owner.client
-    .from("circles")
-    .insert({ name: "Mock Squad", owner_id: owner.id })
-    .select()
-    .single();
+  // Circles are built through the create_circle RPC, which enforces that all
+  // members are mutual friends (they are, from the step above) -- direct
+  // inserts into circles/circle_members are blocked by RLS.
+  const { data: circle, error: circleError } = await owner.client.rpc("create_circle", {
+    p_name: "Mock Squad",
+    p_member_ids: users.slice(1).map((u) => u.id),
+  });
   if (circleError) throw circleError;
-  await owner.client
-    .from("circle_members")
-    .insert(users.map((u) => ({ circle_id: circle.id, member_id: u.id })));
 
   console.log("Posting two overlapping activities (Sport / Today)...");
   const [alice, bob] = users;

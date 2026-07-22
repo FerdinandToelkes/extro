@@ -35,7 +35,13 @@ export default function NewActivityForm({
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [tags, setTags] = useState(initial?.tags ?? []);
   const [visType, setVisType] = useState(
-    initial?.visiblePeopleIds?.length ? "people" : "circle"
+    initial
+      ? initial.visibleToAllFriends
+        ? "friends"
+        : initial.visiblePeopleIds?.length
+        ? "people"
+        : "circle"
+      : "friends"
   );
   const [selectedCircles, setSelectedCircles] = useState(initial?.visibleCircleIds ?? []);
   const [selectedPeople, setSelectedPeople] = useState(initial?.visiblePeopleIds ?? []);
@@ -58,6 +64,7 @@ export default function NewActivityForm({
         expireAfterHours,
         eventAt: eventAt ? new Date(eventAt).toISOString() : null,
         tags,
+        visibleToAllFriends: visType === "friends",
         circleIds: visType === "circle" ? selectedCircles : [],
         peopleIds: visType === "people" ? selectedPeople : [],
       });
@@ -177,7 +184,10 @@ export default function NewActivityForm({
       <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
         Visible to
       </label>
-      <div className="flex gap-2 mb-2.5">
+      <div className="flex gap-2 mb-2.5 flex-wrap">
+        <button className={chip(visType === "friends")} onClick={() => setVisType("friends")}>
+          Everyone I&apos;m friends with
+        </button>
         <button className={chip(visType === "circle")} onClick={() => setVisType("circle")}>
           Friend Circles
         </button>
@@ -185,7 +195,13 @@ export default function NewActivityForm({
           Individual People
         </button>
       </div>
-      {visType === "circle" ? (
+      {visType === "friends" ? (
+        <div className="mb-4">
+          <span className="text-[13px] text-gray-400 font-body">
+            Everyone you&apos;re friends with will see this in their feed.
+          </span>
+        </div>
+      ) : visType === "circle" ? (
         <div className="flex gap-2 mb-4 flex-wrap">
           {circles.length === 0 && (
             <span className="text-[13px] text-gray-400 font-body">

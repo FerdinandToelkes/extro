@@ -8,6 +8,7 @@ import {
   listProfilesByIds,
   listCirclesWithMembers,
   listFriendRequests,
+  listFriendsOf,
   createCircle,
   addCircleMember,
   removeCircleMember,
@@ -19,10 +20,12 @@ export default function CirclesPage() {
   const [friends, setFriends] = useState([]);
   const [circles, setCircles] = useState([]);
   const [memberProfilesById, setMemberProfilesById] = useState({});
+  const [friendsOfById, setFriendsOfById] = useState({});
   const [name, setName] = useState("");
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedCircleId, setExpandedCircleId] = useState(null);
+  const [error, setError] = useState("");
 
   const load = async () => {
     const profile = await getCurrentProfile();
@@ -42,6 +45,14 @@ export default function CirclesPage() {
     ]);
     setFriends(friendProfiles);
     setMemberProfilesById(Object.fromEntries(memberProfiles.map((p) => [p.id, p])));
+    // Each friend's own friend set, so we can enforce the "everyone in a
+    // circle is a mutual friend of everyone else" rule in the pickers.
+    const fof = await Promise.all(
+      friendProfiles.map((f) =>
+        listFriendsOf(f.id).then((list) => [f.id, new Set(list.map((x) => x.id))])
+      )
+    );
+    setFriendsOfById(Object.fromEntries(fof));
     setLoading(false);
   };
 
@@ -52,26 +63,41 @@ export default function CirclesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Would `candidateId` be a mutual friend of everyone already in `memberIds`?
+  // The owner (me) is a friend of every candidate shown, so skip me; the
+  // candidate trivially matches itself.
+  const isFriendsWithAll = (candidateId, memberIds) =>
+    memberIds.every(
+      (m) => m === me.id || m === candidateId || friendsOfById[m]?.has(candidateId)
+    );
+
   const toggle = (id) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
+  const run = async (fn) => {
+    setError("");
+    try {
+      await fn();
+      await load();
+    } catch (err) {
+      setError(err.message || String(err));
+    }
+  };
+
   const submit = async () => {
     if (!name.trim()) return;
-    await createCircle(name.trim(), selected, me.id);
-    setName("");
-    setSelected([]);
-    await load();
+    await run(async () => {
+      await createCircle(name.trim(), selected);
+      setName("");
+      setSelected([]);
+    });
   };
 
-  const handleAddMember = async (circleId, memberId) => {
-    await addCircleMember(circleId, memberId);
-    await load();
-  };
+  const handleAddMember = (circleId, memberId) =>
+    run(() => addCircleMember(circleId, memberId));
 
-  const handleRemoveMember = async (circleId, memberId) => {
-    await removeCircleMember(circleId, memberId);
-    await load();
-  };
+  const handleRemoveMember = (circleId, memberId) =>
+    run(() => removeCircleMember(circleId, memberId));
 
   if (loading) return null;
 
@@ -84,6 +110,15 @@ export default function CirclesPage() {
         <h1 className="font-display font-bold text-2xl text-ink mt-2 mb-5">
           Circles
         </h1>
+
+        {error && (
+          <div className="flex items-start justify-between gap-3 bg-coral/10 border border-coral/40 rounded-xl px-4 py-2.5 mb-4 font-body text-[13px] text-coral">
+            <span>{error}</span>
+            <button onClick={() => setError("")} className="font-mono text-[13px] leading-none">
+              ×
+            </button>
+          </div>
+        )}
 
         <div className="bg-white border border-border rounded-2xl p-5 mb-6">
           <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
@@ -98,20 +133,31 @@ export default function CirclesPage() {
           <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
             Members ({friends.length} available)
           </label>
+          <p className="font-body text-[12px] text-gray-400 mb-2">
+            Everyone in a circle must be mutual friends — options that
+            aren&apos;t friends with someone you&apos;ve picked are disabled.
+          </p>
           <div className="flex gap-2 flex-wrap mb-4">
-            {friends.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => toggle(p.id)}
-                className={`font-display text-[13px] font-semibold px-3.5 py-1.5 rounded-full border ${
-                  selected.includes(p.id)
-                    ? "border-indigo bg-indigo/10 text-indigo"
-                    : "border-border bg-white text-inksoft"
-                }`}
-              >
-                {p.name}
-              </button>
-            ))}
+            {friends.map((p) => {
+              const isSelected = selected.includes(p.id);
+              const allowed = isSelected || isFriendsWithAll(p.id, selected);
+              return (
+                <button
+                  key={p.id}
+                  disabled={!allowed}
+                  onClick={() => toggle(p.id)}
+                  className={`font-display text-[13px] font-semibold px-3.5 py-1.5 rounded-full border ${
+                    isSelected
+                      ? "border-indigo bg-indigo/10 text-indigo"
+                      : allowed
+                      ? "border-border bg-white text-inksoft"
+                      : "border-border bg-white text-gray-300 cursor-not-allowed"
+                  }`}
+                >
+                  {p.name}
+                </button>
+              );
+            })}
             {friends.length === 0 && (
               <span className="text-[13px] text-gray-400">
                 No friends yet —{" "}
@@ -134,7 +180,9 @@ export default function CirclesPage() {
           {circles.map((c) => {
             const isOwner = c.owner_id === me.id;
             const isExpanded = expandedCircleId === c.id;
-            const addableFriends = friends.filter((f) => !c.memberIds.includes(f.id));
+            const addableFriends = friends.filter(
+              (f) => !c.memberIds.includes(f.id) && isFriendsWithAll(f.id, c.memberIds)
+            );
 
             return (
               <div key={c.id} className="bg-white border border-border rounded-xl px-4 py-3">
@@ -180,7 +228,7 @@ export default function CirclesPage() {
                         <div className="flex gap-2 flex-wrap">
                           {addableFriends.length === 0 && (
                             <span className="text-[12px] text-gray-400">
-                              No more friends to add.
+                              No friends who are mutual friends with everyone here yet.
                             </span>
                           )}
                           {addableFriends.map((f) => (

@@ -42,7 +42,9 @@ export default function ActivityCard({
   const author = profilesById[activity.authorId];
   const isMine = activity.authorId === meId;
 
-  const visibilityLabel = activity.visibleCircleIds.length
+  const visibilityLabel = activity.visibleToAllFriends
+    ? "Visible to: All your friends"
+    : activity.visibleCircleIds.length
     ? "Visible to: " +
       activity.visibleCircleIds
         .map((id) => circlesById[id]?.name)
@@ -55,6 +57,16 @@ export default function ActivityCard({
         .filter(Boolean)
         .join(", ")
     : "Visible only to you";
+
+  const eventTimeLabel = activity.eventAt
+    ? new Date(activity.eventAt).toLocaleString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
 
   return (
     <div className="relative bg-white border border-border rounded-2xl rounded-tr-none rounded-bl-sm p-5 pb-4 mb-3.5 overflow-hidden">
@@ -124,25 +136,21 @@ export default function ActivityCard({
             {activity.text}
           </p>
 
+          {eventTimeLabel && (
+            <div className="font-display text-[13px] font-semibold text-ink mb-1">
+              🗓 {eventTimeLabel}
+            </div>
+          )}
+
           {activity.location && (
             <div className="font-mono text-[11.5px] text-inksoft mb-1">
               📍 {activity.location}
             </div>
           )}
 
-          <div className="font-mono text-[11px] text-gray-400 mb-1">
+          <div className="font-mono text-[11px] text-gray-400 mb-3">
             {visibilityLabel}
           </div>
-
-          {activity.expiresAt && (
-            <div className="font-mono text-[11px] text-gray-400 mb-3">
-              Auto-deletes{" "}
-              {new Date(activity.expiresAt).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              })}
-            </div>
-          )}
 
           {needsPlan && (
             <div className="flex items-center gap-2 flex-wrap bg-sand/10 border border-sand/40 rounded-lg px-3 py-2 mb-3">

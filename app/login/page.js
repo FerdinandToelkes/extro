@@ -10,26 +10,18 @@ const USERNAME_HINT = "3-20 characters: lowercase letters, numbers, underscore."
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState("magic");
   const [authAction, setAuthAction] = useState("login");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [sent, setSent] = useState(false);
   const [confirmPending, setConfirmPending] = useState(false);
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
 
   const resetMessages = () => {
     setError("");
-    setSent(false);
     setConfirmPending(false);
-  };
-
-  const switchMode = (m) => {
-    setMode(m);
-    resetMessages();
   };
 
   const switchAuthAction = (a) => {
@@ -56,22 +48,6 @@ export default function LoginPage() {
     } finally {
       setChecking(false);
     }
-  };
-
-  const handleMagicSubmit = async (e) => {
-    e.preventDefault();
-    resetMessages();
-    const normalizedUsername = await validateUsername();
-    if (!normalizedUsername) return;
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
-        data: { name: name || email.split("@")[0], username: normalizedUsername },
-      },
-    });
-    if (error) setError(error.message);
-    else setSent(true);
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -119,121 +95,74 @@ export default function LoginPage() {
       <div className="w-full max-w-sm bg-white border border-border rounded-2xl p-8">
         <h1 className="font-display font-bold text-2xl mb-1">Extro: Activities Feed</h1>
         <p className="text-inksoft text-sm mb-4 font-body">
-          Sign in with a magic link (no password), or use a password if you
-          prefer.
+          Log in with your email and password, or sign up if you&apos;re new.
         </p>
 
-        <div className="flex gap-2 mb-4">
-          <button type="button" className={chip(mode === "magic")} onClick={() => switchMode("magic")}>
-            Magic Link
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            className={chip(authAction === "login")}
+            onClick={() => switchAuthAction("login")}
+          >
+            Log In
           </button>
-          <button type="button" className={chip(mode === "password")} onClick={() => switchMode("password")}>
-            Password
+          <button
+            type="button"
+            className={chip(authAction === "signup")}
+            onClick={() => switchAuthAction("signup")}
+          >
+            Sign Up
           </button>
         </div>
-
-        {mode === "magic" ? (
-          sent ? (
-            <p className="font-body text-sm text-sage">
-              Link sent! Check your inbox ({email}) and click the link.
-            </p>
-          ) : (
-            <form onSubmit={handleMagicSubmit} className="flex flex-col gap-3">
-              <input
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
-              />
-              {usernameInput}
-              <input
-                type="email"
-                required
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
-              />
-              <button
-                type="submit"
-                disabled={checking}
-                className="bg-ink text-white font-display font-semibold rounded-full px-4 py-2 text-sm mt-2 disabled:opacity-50"
-              >
-                {checking ? "Checking username…" : "Send Login Link"}
-              </button>
-              {error && <p className="text-coral text-xs font-body">{error}</p>}
-            </form>
-          )
+        {confirmPending ? (
+          <p className="font-body text-sm text-sage">
+            Almost there — check your inbox ({email}) to confirm your
+            account, then log in with your password.
+          </p>
         ) : (
-          <>
-            <div className="flex gap-2 mb-3">
-              <button
-                type="button"
-                className={chip(authAction === "login")}
-                onClick={() => switchAuthAction("login")}
-              >
-                Log In
-              </button>
-              <button
-                type="button"
-                className={chip(authAction === "signup")}
-                onClick={() => switchAuthAction("signup")}
-              >
-                Sign Up
-              </button>
-            </div>
-            {confirmPending ? (
-              <p className="font-body text-sm text-sage">
-                Almost there — check your inbox ({email}) to confirm your
-                account, then log in with your password.
-              </p>
-            ) : (
-              <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-3">
-                {authAction === "signup" && (
-                  <>
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
-                    />
-                    {usernameInput}
-                  </>
-                )}
+          <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-3">
+            {authAction === "signup" && (
+              <>
                 <input
-                  type="email"
-                  required
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
                 />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={authAction === "signup" && checking}
-                  className="bg-ink text-white font-display font-semibold rounded-full px-4 py-2 text-sm mt-2 disabled:opacity-50"
-                >
-                  {authAction === "signup"
-                    ? checking
-                      ? "Checking username…"
-                      : "Create Account"
-                    : "Log In"}
-                </button>
-                {error && <p className="text-coral text-xs font-body">{error}</p>}
-              </form>
+                {usernameInput}
+              </>
             )}
-          </>
+            <input
+              type="email"
+              required
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+            />
+            <input
+              type="password"
+              required
+              minLength={6}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+            />
+            <button
+              type="submit"
+              disabled={authAction === "signup" && checking}
+              className="bg-ink text-white font-display font-semibold rounded-full px-4 py-2 text-sm mt-2 disabled:opacity-50"
+            >
+              {authAction === "signup"
+                ? checking
+                  ? "Checking username…"
+                  : "Create Account"
+                : "Log In"}
+            </button>
+            {error && <p className="text-coral text-xs font-body">{error}</p>}
+          </form>
         )}
       </div>
     </div>

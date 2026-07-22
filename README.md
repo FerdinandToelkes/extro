@@ -56,16 +56,13 @@ in environment variables.
    Supabase client adds its own paths, so a URL that already ends in
    `/rest/v1/` breaks every request the app makes — including login. This is
    the single most common reason login silently fails.
-5. The login page offers two ways in: a magic link (email, no password —
-   on by default, nothing to change) or a classic email+password sign
-   up/log in. For the password option, go to **Authentication → Sign In /
-   Providers → Email** and consider turning **"Confirm email" off**: with it
-   off, signing up with a password logs you in immediately with no email
-   round-trip at all — handy for creating throwaway test accounts (even
-   with made-up addresses, since no email is ever sent for them) when you
-   want to sign in as multiple people. Leave it on for a more standard,
-   production-like setup. This toggle doesn't affect the magic-link flow,
-   which is its own confirmation step either way.
+5. The login page uses email + password (sign up / log in). Go to
+   **Authentication → Sign In / Providers → Email** and consider turning
+   **"Confirm email" off**: with it off, signing up logs you in immediately
+   with no email round-trip at all — handy for creating throwaway test
+   accounts (even with made-up addresses, since no email is ever sent for
+   them) when you want to sign in as multiple people. Leave it on for a
+   more standard, production-like setup.
 6. **Making database changes later.** Don't edit the live database by hand.
    Create a migration, write the SQL, and push it:
 
@@ -100,8 +97,8 @@ npm install
 npm run dev
 ```
 
-Then open `http://localhost:3000` in your browser, log in with your own email
-(the magic link lands in your inbox), and try it out.
+Then open `http://localhost:3000` in your browser, sign up with an email and
+password, and try it out.
 
 ### Testing as multiple people in one browser
 

@@ -23,8 +23,9 @@ import ActivityCard from "../components/ActivityCard";
 import OverlapBanner from "../components/OverlapBanner";
 import NewActivityForm from "../components/NewActivityForm";
 
-function isVisibleToMe(activity, meId, circles) {
+function isVisibleToMe(activity, meId, circles, friendIds) {
   if (activity.authorId === meId) return true;
+  if (activity.visibleToAllFriends && friendIds.includes(activity.authorId)) return true;
   if (activity.visiblePeopleIds.includes(meId)) return true;
   return activity.visibleCircleIds.some((cid) => {
     const circle = circles.find((c) => c.id === cid);
@@ -112,9 +113,14 @@ export default function FeedPage() {
     [circles]
   );
 
+  const friendIds = useMemo(
+    () => friendRequests.filter((r) => r.status === "accepted").map((r) => r.otherId),
+    [friendRequests]
+  );
+
   const visibleActivities = useMemo(
-    () => (me ? activities.filter((a) => isVisibleToMe(a, me.id, circles)) : []),
-    [activities, me, circles]
+    () => (me ? activities.filter((a) => isVisibleToMe(a, me.id, circles, friendIds)) : []),
+    [activities, me, circles, friendIds]
   );
 
   const overlaps = useMemo(() => {
@@ -174,10 +180,6 @@ export default function FeedPage() {
     );
   }, [visibleActivities, editing]);
 
-  const friendIds = useMemo(
-    () => friendRequests.filter((r) => r.status === "accepted").map((r) => r.otherId),
-    [friendRequests]
-  );
   const incomingRequestCount = useMemo(
     () => friendRequests.filter((r) => r.status === "pending" && r.direction === "incoming").length,
     [friendRequests]
@@ -211,6 +213,7 @@ export default function FeedPage() {
     expireAfterHours,
     eventAt,
     tags,
+    visibleToAllFriends,
     circleIds,
     peopleIds,
   }) => {
@@ -225,6 +228,7 @@ export default function FeedPage() {
         expireAfterHours,
         eventAt,
         tags,
+        visibleToAllFriends,
         circleIds,
         peopleIds,
       });
@@ -243,6 +247,7 @@ export default function FeedPage() {
     expireAfterHours,
     eventAt,
     tags,
+    visibleToAllFriends,
     circleIds,
     peopleIds,
   }) => {
@@ -257,6 +262,7 @@ export default function FeedPage() {
         expireAfterHours,
         eventAt,
         tags,
+        visibleToAllFriends,
         circleIds,
         peopleIds,
       });
