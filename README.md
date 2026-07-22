@@ -18,9 +18,33 @@ in environment variables.
 
 1. Sign up for free at https://supabase.com, click "New Project".
 2. Wait until the project is ready (~2 min).
-3. In the left menu go to **SQL Editor** → **New query** → paste in the
-   contents of `sql/schema.sql` → **Run**. This creates all tables, the
-   auto-profile trigger, and the access rules.
+3. **Set up the database schema with the [Supabase CLI](https://supabase.com/docs/guides/cli).**
+   This project keeps its whole schema as versioned migration files under
+   `supabase/migrations/` instead of a script you paste by hand, so setting
+   up (or later changing) the database is a couple of terminal commands:
+
+   ```bash
+   # Install the CLI (macOS/Homebrew; see the docs for Linux/Windows)
+   brew install supabase/tap/supabase
+
+   # Authenticate (opens a browser)
+   supabase login
+
+   # Link this repo to your project. The ref is the subdomain of your
+   # Project URL — https://abcdxyz.supabase.co → abcdxyz.
+   # (For the existing Extro project it's upcqsnclbkovtvmtxpcl.)
+   supabase link --project-ref <your-project-ref>
+
+   # Create every table, policy, trigger and the pg_cron cleanup job.
+   supabase db push
+   ```
+
+   `supabase db push` connects straight to the linked project over the
+   network — **no Docker required**. (Docker is only needed for the optional
+   local-database stack, which this project doesn't use; everything runs
+   against the hosted project directly.) If the `pg_cron` step errors with a
+   permissions message, enable it once under **Database → Extensions →
+   pg_cron** in the dashboard, then re-run `supabase db push`.
 4. In the left menu go to **Project Settings → API**. There you'll find:
    - **Project URL** → goes into `NEXT_PUBLIC_SUPABASE_URL`
    - **anon public key** (or, on newer projects, the **publishable key**,
@@ -42,70 +66,24 @@ in environment variables.
    want to sign in as multiple people. Leave it on for a more standard,
    production-like setup. This toggle doesn't affect the magic-link flow,
    which is its own confirmation step either way.
-6. **If you already ran an earlier version of `schema.sql`**, also run, in
-   this order (same SQL editor):
-   - `sql/migration_edit_delete_location.sql` — adds the optional `location`
-     column and the policies that let authors edit/delete their own
-     activities.
-   - `sql/migration_bugfixes.sql` — tightens a couple of overly-permissive
-     access rules (see below) and fixes an avatar-initials edge case.
-   - `sql/migration_friend_requests.sql` — adds the friend request/accept
-     flow. Adding someone to a circle, or sharing an activity with them
-     individually, now requires an accepted friend request first.
-   - `sql/migration_activity_expiry.sql` — adds self-expiring activities
-     (see below). This one enables the **`pg_cron`** Postgres extension; if
-     the `create extension pg_cron` line errors with a permissions message,
-     enable it first under **Database → Extensions → pg_cron** in the
-     dashboard, then re-run just the last two statements of that file.
-   - `sql/migration_merge_activities.sql` — fixes "Merge" on overlapping
-     activities so it actually consolidates them instead of creating a
-     duplicate. **Easy to miss** — it's just a SQL function, nothing to
-     configure, but Merge silently does nothing without it.
-   - `sql/migration_visibility_rls.sql` — enforces activity visibility
-     (circles/individual people) at the database level, not just in the
-     browser. No app behavior changes; this only matters if someone calls
-     the Supabase API directly instead of using the app.
-   - `sql/migration_fix_visibility_recursion.sql` — **only needed if you
-     already ran `migration_visibility_rls.sql` before 2026-07-21 and are
-     now stuck on a loading screen**, or seeing "infinite recursion
-     detected in policy for relation activities." An earlier version of
-     that migration had a circular policy bug; this fixes it. If you're
-     running the migrations fresh/in order, `migration_visibility_rls.sql`
-     is already correct and you can skip this one.
-   - `sql/migration_activity_tags.sql` — adds optional interest tags
-     (separate from category) for browsing/filtering the feed, and updates
-     the merge function so tags carry over when activities are merged.
-   - `sql/migration_profile_fields.sql` — adds optional `city` and `bio`
-     fields to your profile, editable on the new Profile page. City doubles
-     as a feed filter ("same city as me").
-   - `sql/migration_expiry_hours.sql` — switches auto-delete timing from
-     days to hours (renames the column and multiplies existing values by
-     24, so nothing already posted changes its actual delete time) and
-     adds an optional exact event date/time (Advanced settings in the
-     activity form) that overrides the fuzzy When-chip-based calculation.
-   - `sql/migration_usernames.sql` — adds a unique, required-at-signup
-     username (existing accounts keep it blank until set via Profile).
-     Friend-adding is now exact-username search only — the Friends page no
-     longer lists everyone. Also adds the function behind "see a friend's
-     friends" on their profile page.
-   - `sql/migration_availability.sql` — **superseded, skip this one** —
-     see `migration_availability_slots.sql` below instead, even if you
-     already ran this.
-   - `sql/migration_subscribed_tags.sql` — adds tag subscriptions
-     ("recurring interests"), set on your Profile page. Matching activities
-     get a badge and sort to the top of your feed.
-   - `sql/migration_availability_slots.sql` — replaces the single-status
-     availability bar with a weekly calendar (up to one slot per day,
-     each shareable with specific circles or people) on a new `/calendar`
-     page. Also adds circle membership management (add/remove people from
-     an existing circle, not just at creation) — `circle_members` had no
-     delete policy at all until this migration, so removal genuinely
-     wasn't possible before, not just missing from the UI.
+6. **Making database changes later.** Don't edit the live database by hand.
+   Create a migration, write the SQL, and push it:
 
-   On a brand-new project you can skip all thirteen (the sixth is a hotfix,
-   not needed at all on a fresh project) — the full `schema.sql` already
-   includes the correct version of those changes (`schema.sql` itself also
-   enables `pg_cron` the same way, so the note above applies there too).
+   ```bash
+   supabase migration new describe_your_change   # new timestamped .sql file
+   #  …write your SQL in supabase/migrations/<timestamp>_describe_your_change.sql…
+   supabase db push                              # applies it to the linked project
+   ```
+
+   The CLI records which migrations have already run in a history table on
+   the database itself (`supabase migration list` shows local files vs.
+   what's applied), so there's no checklist to keep in sync and no way to
+   run the same change twice. The first file in `supabase/migrations/` is a
+   baseline snapshot of the entire schema as of the switch to the CLI;
+   every file after it is one incremental change. (This replaced an older
+   flow of a hand-maintained `schema.sql` plus a long list of numbered
+   migration files pasted into the SQL editor — all now folded into that
+   baseline.)
 
 ## 2. Test locally (optional, but recommended before going live)
 
@@ -225,4 +203,6 @@ manual re-upload needed.
 Just tell me what you want to change based on feedback from your friends —
 I'll write the matching code, and all you need to do afterward is run
 `git add . && git commit -m "..." && git push`; Vercel takes care of the rest
-automatically.
+automatically. If a change also touches the database, I'll add a new file
+under `supabase/migrations/`; you then run `supabase db push` once to apply
+it to your live project (see step 1.6).
