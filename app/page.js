@@ -23,6 +23,7 @@ import ActivityCard from "../components/ActivityCard";
 import OverlapBanner from "../components/OverlapBanner";
 import NewActivityForm from "../components/NewActivityForm";
 import WelcomeModal from "../components/WelcomeModal";
+import NotificationBell from "../components/NotificationBell";
 
 const TUTORIAL_SEEN_KEY = "extro_tutorial_seen";
 
@@ -364,7 +365,8 @@ export default function FeedPage() {
               What are you in the mood for?
             </h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-start">
+            <NotificationBell />
             <button
               onClick={() => setShowTutorial(true)}
               className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
