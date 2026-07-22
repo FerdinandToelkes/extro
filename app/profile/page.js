@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCurrentProfile, updateMyProfile } from "../../lib/queries";
+import { TAGS } from "../../lib/tags";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 const USERNAME_HINT = "3-20 characters: lowercase letters, numbers, underscore.";
-const TAGS = ["Outdoors", "Games", "Music", "Fitness", "Coffee", "Nightlife", "Learning", "Chill"];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -144,7 +144,7 @@ export default function ProfilePage() {
                 (matching activities get highlighted on your feed)
               </span>
             </label>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap max-h-32 overflow-y-auto border border-border rounded-lg p-2">
               {TAGS.map((t) => (
                 <button key={t} className={chip(subscribedTags.includes(t))} onClick={() => toggleTag(t)}>
                   {t}

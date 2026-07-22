@@ -22,6 +22,9 @@ import {
 import ActivityCard from "../components/ActivityCard";
 import OverlapBanner from "../components/OverlapBanner";
 import NewActivityForm from "../components/NewActivityForm";
+import WelcomeModal from "../components/WelcomeModal";
+
+const TUTORIAL_SEEN_KEY = "extro_tutorial_seen";
 
 function isVisibleToMe(activity, meId, circles, friendIds) {
   if (activity.authorId === meId) return true;
@@ -63,6 +66,7 @@ export default function FeedPage() {
   const [activeTags, setActiveTags] = useState([]);
   const [activeCategories, setActiveCategories] = useState([]);
   const [sameCityOnly, setSameCityOnly] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const loadAll = useCallback(async () => {
     const [profs, circs, acts, reqs] = await Promise.all([
@@ -90,6 +94,9 @@ export default function FeedPage() {
       setMe(profile);
       await loadAll();
       setLoading(false);
+      if (typeof window !== "undefined" && !localStorage.getItem(TUTORIAL_SEEN_KEY)) {
+        setShowTutorial(true);
+      }
     })();
 
     const unsubActivities = subscribeToActivityChanges(() => loadAll());
@@ -331,6 +338,11 @@ export default function FeedPage() {
     router.replace("/login");
   };
 
+  const closeTutorial = () => {
+    setShowTutorial(false);
+    if (typeof window !== "undefined") localStorage.setItem(TUTORIAL_SEEN_KEY, "1");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg font-body text-inksoft">
@@ -341,6 +353,7 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-bg font-body">
+      {showTutorial && <WelcomeModal onClose={closeTutorial} />}
       <div className="max-w-[620px] mx-auto px-4 pt-7 pb-16">
         <div className="flex justify-between items-start mb-5">
           <div>
@@ -351,12 +364,20 @@ export default function FeedPage() {
               What are you in the mood for?
             </h1>
           </div>
-          <button
-            onClick={handleLogout}
-            className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
-          >
-            Sign Out
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
+            >
+              ? How it works
+            </button>
+            <button
+              onClick={handleLogout}
+              className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {error && (

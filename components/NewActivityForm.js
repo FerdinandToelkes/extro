@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { TAGS } from "../lib/tags";
 
 const TIMEFRAMES = ["Today", "Tomorrow", "Weekend"];
 const CATEGORIES = ["Sport", "Café", "Culture", "Leisure", "Food", "Other"];
-const TAGS = ["Outdoors", "Games", "Music", "Fitness", "Coffee", "Nightlife", "Learning", "Chill"];
 
 // Formats an ISO timestamp for an <input type="datetime-local"> value
 // (YYYY-MM-DDTHH:mm, in the browser's local time, no seconds/timezone).
@@ -120,7 +120,7 @@ export default function NewActivityForm({
           (optional, for browsing)
         </span>
       </label>
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-4 flex-wrap max-h-32 overflow-y-auto border border-border rounded-lg p-2">
         {TAGS.map((t) => (
           <button key={t} className={chip(tags.includes(t))} onClick={() => toggle(tags, setTags, t)}>
             {t}

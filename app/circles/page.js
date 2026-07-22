@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -27,6 +27,7 @@ export default function CirclesPage() {
   const [loading, setLoading] = useState(true);
   const [expandedCircleId, setExpandedCircleId] = useState(null);
   const [error, setError] = useState("");
+  const nameInputRef = useRef(null);
 
   const load = async () => {
     const profile = await getCurrentProfile();
@@ -71,6 +72,44 @@ export default function CirclesPage() {
     memberIds.every(
       (m) => m === me.id || m === candidateId || friendsOfById[m]?.has(candidateId)
     );
+
+  // Groups of your friends who are all mutual friends with each other (and
+  // with you) but aren't already a circle -- greedy maximal cliques seeded
+  // from each friend, deduped, size >= 3 (you + 2), minus existing circles.
+  const suggestions = useMemo(() => {
+    if (!me) return [];
+    const friendIds = friends.map((f) => f.id);
+    // You are friends with all your friends by definition; two friends are
+    // connected only if each appears in the other's friend set.
+    const connected = (a, b) =>
+      a === b || a === me.id || b === me.id || Boolean(friendsOfById[a]?.has(b));
+    const existingKeys = new Set(
+      circles.map((c) => [...c.memberIds].sort().join(","))
+    );
+    const seen = new Set();
+    const out = [];
+    for (const seed of friendIds) {
+      const clique = [me.id, seed];
+      for (const cand of friendIds) {
+        if (clique.includes(cand)) continue;
+        if (clique.every((m) => connected(m, cand))) clique.push(cand);
+      }
+      const key = [...clique].sort().join(",");
+      if (seen.has(key) || existingKeys.has(key)) continue;
+      seen.add(key);
+      if (clique.length < 3) continue;
+      out.push(clique.filter((id) => id !== me.id));
+    }
+    return out;
+  }, [me, friends, friendsOfById, circles]);
+
+  const prefillFromSuggestion = (memberIds) => {
+    setSelected(memberIds);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    nameInputRef.current?.focus();
+  };
+
+  const nameOf = (id) => (id === me.id ? "You" : friends.find((f) => f.id === id)?.name ?? "…");
 
   const toggle = (id) =>
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -134,6 +173,7 @@ export default function CirclesPage() {
             New Circle
           </label>
           <input
+            ref={nameInputRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Sports"
@@ -184,6 +224,33 @@ export default function CirclesPage() {
             Create Circle
           </button>
         </div>
+
+        {suggestions.length > 0 && (
+          <div className="mb-6">
+            <h2 className="font-mono text-[11px] text-inksoft uppercase tracking-wide mb-2">
+              Suggested circles
+            </h2>
+            <div className="flex flex-col gap-2">
+              {suggestions.map((memberIds) => (
+                <div
+                  key={memberIds.join(",")}
+                  className="bg-indigo/5 border border-indigo/30 rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+                >
+                  <span className="font-body text-[13px] text-ink">
+                    {["You", ...memberIds.map(nameOf)].join(" · ")}
+                    <span className="text-gray-400"> are all friends</span>
+                  </span>
+                  <button
+                    onClick={() => prefillFromSuggestion(memberIds)}
+                    className="font-display font-semibold text-[12px] px-3 py-1 rounded-full bg-indigo text-white shrink-0"
+                  >
+                    Create this circle
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           {circles.map((c) => {
