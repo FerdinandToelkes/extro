@@ -11,17 +11,17 @@ const STEPS = [
   {
     emoji: "👀",
     title: "You choose who sees each post",
-    body: "Every activity is shared with everyone you're friends with (the default), a specific Friend Circle, or just a few individual people. Nothing is ever public.",
+    body: "Every activity is shared with everyone you're friends with (the default), a specific Group, or just a few individual people. Nothing is ever public.",
   },
   {
     emoji: "○",
-    title: "Circles are mutual-friend groups",
-    body: "A circle (e.g. “Climbing crew”) is a reusable audience where everyone is friends with everyone else. Create them on the Circles page — Extro even suggests circles from friends who all know each other.",
+    title: "Groups gather friends who all know each other",
+    body: "A group (e.g. “Climbing crew”) is a reusable audience where everyone is friends with everyone else. Create them on the Groups page — Extro even suggests groups from friends who all know each other.",
   },
   {
     emoji: "🗓",
     title: "Share when you're free",
-    body: "On the Calendar page you can mark when you're generally free each day of the week, and see when your friends are around — each slot visible only to the circles or people you pick.",
+    body: "On the Calendar page you can mark when you're generally free each day of the week, and see when your friends are around — each slot visible only to the groups or people you pick.",
   },
   {
     emoji: "✋",

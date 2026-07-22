@@ -1,6 +1,6 @@
 # Activities Feed
 
-Web app for sharing with your friend circle. Runs entirely in the browser via a
+Web app for sharing with your friend group. Runs entirely in the browser via a
 link — nobody has to install anything.
 
 **Stack:** Next.js (React, generates the web interface) + Supabase (Postgres
@@ -130,10 +130,10 @@ test accounts instant, even with made-up email addresses.
 **Or skip creating accounts by hand:** `npm run seed:test-users` creates
 three mock accounts — `mock-alice@extro.test`, `mock-bob@extro.test`, and
 `mock-carol@extro.test`, all with password `testpass123` — friends them
-with each other, shares a "Mock Squad" circle, and posts two overlapping
+with each other, shares a "Mock Squad" group, and posts two overlapping
 Sport/Today activities — so there's an overlap banner ready to test Merge
 on immediately after it runs. Safe to re-run, though it'll add a fresh
-duplicate circle/activities each time.
+duplicate group/activities each time.
 
 ## 3. Push to GitHub
 
@@ -172,9 +172,9 @@ manual re-upload needed.
 
 - **Access rights (RLS):** Currently all signed-in users may read all
   records (writing only to their own entries). That's fine for a trusted
-  friend circle for testing, but should be tightened before a larger or
+  friend group for testing, but should be tightened before a larger or
   less-trusted group gets access.
-- **Friend circles** only consist of people who have already signed up (no
+- **Friend groups** only consist of people who have already signed up (no
   address-book import). That's enough for the first test run among friends.
 - **Auto-delete timing** is approximate: the "When" chip (Today/Tomorrow/
   Weekend) is a vibe, not an exact date, so the auto-delete countdown is

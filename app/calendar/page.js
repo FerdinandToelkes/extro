@@ -126,7 +126,7 @@ export default function CalendarPage() {
         <h1 className="font-display font-bold text-2xl text-ink mt-2 mb-1">Calendar</h1>
         <p className="font-body text-[13px] text-inksoft mb-5">
           Share when you&apos;re generally free — up to one slot per day, each
-          visible only to the circles or people you pick.
+          visible only to the groups or people you pick.
         </p>
 
         {error && (
@@ -184,7 +184,7 @@ export default function CalendarPage() {
 
                   <div className="flex gap-2">
                     <button className={chip(editVisType === "circle")} onClick={() => setEditVisType("circle")}>
-                      Friend Circles
+                      Friend Groups
                     </button>
                     <button className={chip(editVisType === "people")} onClick={() => setEditVisType("people")}>
                       Individual People
@@ -195,7 +195,7 @@ export default function CalendarPage() {
                     <div className="flex gap-2 flex-wrap">
                       {circles.length === 0 && (
                         <span className="text-[13px] text-gray-400 font-body">
-                          No friend circles yet — create one under &quot;Circles&quot;.
+                          No friend groups yet — create one under &quot;Groups&quot;.
                         </span>
                       )}
                       {circles.map((c) => (

@@ -356,30 +356,29 @@ export default function FeedPage() {
     <div className="min-h-screen bg-bg font-body">
       {showTutorial && <WelcomeModal onClose={closeTutorial} />}
       <div className="max-w-[620px] mx-auto px-4 pt-7 pb-16">
-        <div className="flex justify-between items-start mb-5">
-          <div>
-            <div className="font-mono text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-              {filteredActivities.length} open activities in your circles
-            </div>
-            <h1 className="font-display font-bold text-[28px] text-ink m-0">
-              What are you in the mood for?
-            </h1>
+        <div className="flex justify-end gap-2 mb-6">
+          <NotificationBell />
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
+          >
+            ? How it works
+          </button>
+          <button
+            onClick={handleLogout}
+            className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
+          >
+            Sign Out
+          </button>
+        </div>
+
+        <div className="mb-5">
+          <div className="font-mono text-[11px] text-gray-400 uppercase tracking-wide mb-1">
+            {filteredActivities.length} open activities in your feed
           </div>
-          <div className="flex gap-2 items-start">
-            <NotificationBell />
-            <button
-              onClick={() => setShowTutorial(true)}
-              className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
-            >
-              ? How it works
-            </button>
-            <button
-              onClick={handleLogout}
-              className="font-mono text-[11px] text-inksoft border border-border rounded-full px-3 py-1.5 h-fit"
-            >
-              Sign Out
-            </button>
-          </div>
+          <h1 className="font-display font-bold text-[28px] text-ink m-0">
+            What are you in the mood for?
+          </h1>
         </div>
 
         {error && (
@@ -391,52 +390,31 @@ export default function FeedPage() {
           </div>
         )}
 
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <div className="flex gap-2 mb-5 flex-wrap">
           <Link
             href="/friends"
             className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
           >
-            + Manage Friends{incomingRequestCount > 0 ? ` · ${incomingRequestCount}` : ""}
-          </Link>
-          <Link
-            href="/profile"
-            className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
-          >
-            + My Profile
+            My Friends{incomingRequestCount > 0 ? ` · ${incomingRequestCount}` : ""}
           </Link>
           <Link
             href="/calendar"
             className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
           >
-            + Calendar
+            My Calendar
           </Link>
-        </div>
-
-        <div className="bg-white border border-border rounded-xl px-3.5 py-3 mb-5">
-          <div className="font-mono text-[10.5px] text-gray-400 uppercase tracking-wide mb-2">
-            Your circles
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            {circles.map((c) => (
-              <span
-                key={c.id}
-                className="font-mono text-[11.5px] text-inksoft bg-bg border border-border rounded-full px-3 py-1"
-              >
-                {c.name} · {c.memberIds.length}
-              </span>
-            ))}
-            {circles.length === 0 && (
-              <span className="font-body text-[12.5px] text-gray-400">
-                No circles yet.
-              </span>
-            )}
-            <Link
-              href="/circles"
-              className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
-            >
-              + Manage circles
-            </Link>
-          </div>
+          <Link
+            href="/circles"
+            className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
+          >
+            My Groups
+          </Link>
+          <Link
+            href="/profile"
+            className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
+          >
+            My Profile
+          </Link>
         </div>
 
         {editing ? (

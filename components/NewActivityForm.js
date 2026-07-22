@@ -189,7 +189,7 @@ export default function NewActivityForm({
           Everyone I&apos;m friends with
         </button>
         <button className={chip(visType === "circle")} onClick={() => setVisType("circle")}>
-          Friend Circles
+          Friend Groups
         </button>
         <button className={chip(visType === "people")} onClick={() => setVisType("people")}>
           Individual People
@@ -205,7 +205,7 @@ export default function NewActivityForm({
         <div className="flex gap-2 mb-4 flex-wrap">
           {circles.length === 0 && (
             <span className="text-[13px] text-gray-400 font-body">
-              No friend circles yet – create one under &quot;Circles&quot;.
+              No friend groups yet – create one under &quot;Groups&quot;.
             </span>
           )}
           {circles.map((c) => (

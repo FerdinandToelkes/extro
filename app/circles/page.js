@@ -140,7 +140,7 @@ export default function CirclesPage() {
     run(() => removeCircleMember(circleId, memberId));
 
   const handleDeleteCircle = (circle) => {
-    if (!window.confirm(`Delete the circle "${circle.name}"? This can't be undone.`)) return;
+    if (!window.confirm(`Delete the group "${circle.name}"? This can't be undone.`)) return;
     return run(async () => {
       if (expandedCircleId === circle.id) setExpandedCircleId(null);
       await deleteCircle(circle.id);
@@ -156,7 +156,7 @@ export default function CirclesPage() {
           ← Back to Feed
         </Link>
         <h1 className="font-display font-bold text-2xl text-ink mt-2 mb-5">
-          Circles
+          Groups
         </h1>
 
         {error && (
@@ -170,7 +170,7 @@ export default function CirclesPage() {
 
         <div className="bg-white border border-border rounded-2xl p-5 mb-6">
           <label className="block font-mono text-[11px] text-inksoft uppercase tracking-wide mb-1.5">
-            New Circle
+            New Group
           </label>
           <input
             ref={nameInputRef}
@@ -183,7 +183,7 @@ export default function CirclesPage() {
             Members ({friends.length} available)
           </label>
           <p className="font-body text-[12px] text-gray-400 mb-2">
-            Everyone in a circle must be mutual friends — options that
+            Everyone in a group must be mutual friends — options that
             aren&apos;t friends with someone you&apos;ve picked are disabled.
           </p>
           <div className="flex gap-2 flex-wrap mb-4">
@@ -221,14 +221,14 @@ export default function CirclesPage() {
             onClick={submit}
             className="font-display font-semibold text-sm px-5 py-2 rounded-full bg-ink text-white"
           >
-            Create Circle
+            Create Group
           </button>
         </div>
 
         {suggestions.length > 0 && (
           <div className="mb-6">
             <h2 className="font-mono text-[11px] text-inksoft uppercase tracking-wide mb-2">
-              Suggested circles
+              Suggested groups
             </h2>
             <div className="flex flex-col gap-2">
               {suggestions.map((memberIds) => (
@@ -244,7 +244,7 @@ export default function CirclesPage() {
                     onClick={() => prefillFromSuggestion(memberIds)}
                     className="font-display font-semibold text-[12px] px-3 py-1 rounded-full bg-indigo text-white shrink-0"
                   >
-                    Create this circle
+                    Create this group
                   </button>
                 </div>
               ))}
@@ -326,7 +326,7 @@ export default function CirclesPage() {
                           onClick={() => handleDeleteCircle(c)}
                           className="font-mono text-[11px] text-coral border border-coral/40 rounded-full px-3 py-1 hover:bg-coral/10"
                         >
-                          Delete circle
+                          Delete group
                         </button>
                       </div>
                     )}

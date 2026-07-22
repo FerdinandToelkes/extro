@@ -93,7 +93,7 @@ export default function ProfilePage() {
   const handleDeleteAccount = async () => {
     if (
       !window.confirm(
-        "Delete your account permanently? This removes your profile, activities, circles you own, friendships, and availability. This cannot be undone."
+        "Delete your account permanently? This removes your profile, activities, groups you own, friendships, and availability. This cannot be undone."
       )
     )
       return;
@@ -223,7 +223,7 @@ export default function ProfilePage() {
           </label>
           <p className="font-body text-[13px] text-inksoft mb-3">
             Permanently delete your account and everything tied to it — your profile,
-            activities, circles you own, friendships, and availability. This can&apos;t
+            activities, groups you own, friendships, and availability. This can&apos;t
             be undone.
           </p>
           <button
