@@ -8,6 +8,7 @@ import {
   markAllNotificationsRead,
   subscribeToNotifications,
 } from "../lib/queries";
+import { isPushSupported, getPushState, enablePush, disablePush } from "../lib/push";
 
 function relativeTime(iso) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -46,6 +47,9 @@ export default function NotificationBell() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
+  const [push, setPush] = useState({ supported: false, enabled: false });
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState("");
 
   const load = async () => {
     try {
@@ -58,10 +62,25 @@ export default function NotificationBell() {
   useEffect(() => {
     (async () => {
       await load();
+      if (isPushSupported()) setPush(await getPushState());
     })();
     const unsub = subscribeToNotifications(() => load());
     return unsub;
   }, []);
+
+  const togglePush = async () => {
+    setPushBusy(true);
+    setPushError("");
+    try {
+      if (push.enabled) await disablePush();
+      else await enablePush();
+      setPush(await getPushState());
+    } catch (err) {
+      setPushError(err.message || String(err));
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   const unread = items.filter((i) => !i.read).length;
 
@@ -137,6 +156,25 @@ export default function NotificationBell() {
                   </div>
                 </button>
               ))
+            )}
+
+            {push.supported && (
+              <div className="px-3 py-2.5 border-t border-border bg-bg/40">
+                <button
+                  onClick={togglePush}
+                  disabled={pushBusy}
+                  className="font-mono text-[11px] text-indigo disabled:opacity-50"
+                >
+                  {pushBusy
+                    ? "…"
+                    : push.enabled
+                    ? "🔕 Disable push on this device"
+                    : "🔔 Enable push on this device"}
+                </button>
+                {pushError && (
+                  <p className="font-mono text-[10.5px] text-coral mt-1">{pushError}</p>
+                )}
+              </div>
             )}
           </div>
         </>

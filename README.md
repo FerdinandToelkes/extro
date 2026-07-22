@@ -168,6 +168,40 @@ manual re-upload needed.
 > error specifically means a `/rest/v1/`-style URL is still in the live build —
 > use the plain `https://xxxx.supabase.co` Project URL (see step 1.4).
 
+## 5. Optional: browser push notifications
+
+The app has an in-app notification bell out of the box. To also get **push
+notifications** (that reach you with the tab closed), there's a one-time setup.
+Push only works on the deployed site (it needs the public URL), not localhost.
+
+1. **Generate VAPID keys** (a keypair that signs push messages) — run once:
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+2. **Add these environment variables** in Vercel (Project → Settings →
+   Environment Variables), and the same in your local `.env.local` if you want
+   the dev build to have them:
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — the public key from step 1
+   - `VAPID_PUBLIC_KEY` — the same public key (server side)
+   - `VAPID_PRIVATE_KEY` — the private key from step 1 (secret)
+   - `VAPID_SUBJECT` — `mailto:you@example.com`
+   - `SUPABASE_SERVICE_ROLE_KEY` — from Supabase → Project Settings → API
+     ("service_role", secret — never commit it or expose it in the browser)
+   - `PUSH_WEBHOOK_SECRET` — any long random string you make up
+3. **Create a Database Webhook** in Supabase (Dashboard → Database → Webhooks →
+   Enable, then Create a new hook):
+   - Table: `notifications`; Events: **Insert** and **Update**
+   - Type: **HTTP Request**, method **POST**, URL
+     `https://<your-vercel-url>/api/push/send`
+   - HTTP Header: `x-webhook-secret` = the same `PUSH_WEBHOOK_SECRET`
+4. **Redeploy** (push any commit) so the env vars and the `/api/push/send`
+   route go live. Then open the app, click the 🔔 bell → **Enable push on this
+   device**, and allow notifications when the browser asks.
+
+Notes: iOS Safari only allows web push if the site is added to the Home Screen
+first. Each browser/device enables push separately. "Disable push on this
+device" in the bell menu turns it back off.
+
 ## What's intentionally kept simple for testing among friends
 
 - **Access rights (RLS):** Visibility is enforced at the database level with
