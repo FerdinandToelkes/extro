@@ -63,6 +63,13 @@ in environment variables.
    accounts (even with made-up addresses, since no email is ever sent for
    them) when you want to sign in as multiple people. Leave it on for a
    more standard, production-like setup.
+
+   Note: the **"Forgot password?"** flow sends a reset email, so it needs
+   working email delivery. Supabase's built-in email works out of the box but
+   is rate-limited (a few per hour) — fine for a friend group; configure your
+   own SMTP under **Authentication → Emails** if you outgrow it. Account
+   deletion is self-service from the Profile page and is immediate and
+   irreversible (it wipes the account and everything tied to it).
 6. **Making database changes later.** Don't edit the live database by hand.
    Create a migration, write the SQL, and push it:
 

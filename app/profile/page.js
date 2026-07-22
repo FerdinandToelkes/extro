@@ -3,11 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCurrentProfile, updateMyProfile } from "../../lib/queries";
+import { getCurrentProfile, updateMyProfile, deleteMyAccount } from "../../lib/queries";
 import { TAGS } from "../../lib/tags";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 const USERNAME_HINT = "3-20 characters: lowercase letters, numbers, underscore.";
+
+// A username can only be changed once every 6 months. Given when it last
+// changed, returns the Date it can next change (or null if never changed).
+function nextUsernameChange(changedAt) {
+  if (!changedAt) return null;
+  const d = new Date(changedAt);
+  d.setMonth(d.getMonth() + 6);
+  return d;
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -17,9 +26,11 @@ export default function ProfilePage() {
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
   const [subscribedTags, setSubscribedTags] = useState([]);
+  const [usernameChangedAt, setUsernameChangedAt] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -33,9 +44,13 @@ export default function ProfilePage() {
       setCity(profile.city ?? "");
       setBio(profile.bio ?? "");
       setSubscribedTags(profile.subscribed_tags ?? []);
+      setUsernameChangedAt(profile.username_changed_at ?? null);
       setLoading(false);
     })();
   }, [router]);
+
+  const nextChange = nextUsernameChange(usernameChangedAt);
+  const usernameLocked = Boolean(nextChange && nextChange > new Date());
 
   const toggleTag = (t) =>
     setSubscribedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
@@ -64,10 +79,32 @@ export default function ProfilePage() {
         subscribedTags,
       });
       setSaved(true);
+      // Re-read the authoritative cooldown stamp (the DB trigger only stamps
+      // it when the username actually changed).
+      const fresh = await getCurrentProfile();
+      setUsernameChangedAt(fresh?.username_changed_at ?? null);
     } catch (err) {
       setError(err.message || String(err));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm(
+        "Delete your account permanently? This removes your profile, activities, circles you own, friendships, and availability. This cannot be undone."
+      )
+    )
+      return;
+    setDeleting(true);
+    setError("");
+    try {
+      await deleteMyAccount();
+      router.replace("/login");
+    } catch (err) {
+      setError(err.message || String(err));
+      setDeleting(false);
     }
   };
 
@@ -104,9 +141,23 @@ export default function ProfilePage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="e.g., alice_b"
-              className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm outline-none"
+              disabled={usernameLocked}
+              className="w-full border border-border rounded-lg px-3 py-2 font-body text-sm outline-none disabled:bg-bg disabled:text-inksoft"
             />
-            <p className="text-[11px] text-gray-400 font-mono mt-1">{USERNAME_HINT}</p>
+            {usernameLocked ? (
+              <p className="text-[11px] text-gray-400 font-mono mt-1">
+                A username can only be changed once every 6 months. You can change it
+                again on{" "}
+                {nextChange.toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+                .
+              </p>
+            ) : (
+              <p className="text-[11px] text-gray-400 font-mono mt-1">{USERNAME_HINT}</p>
+            )}
           </div>
 
           <div>
@@ -164,6 +215,24 @@ export default function ProfilePage() {
             {saved && <span className="font-body text-sm text-sage">Saved!</span>}
             {error && <span className="font-body text-sm text-coral">{error}</span>}
           </div>
+        </div>
+
+        <div className="bg-white border border-coral/30 rounded-2xl p-5">
+          <label className="block font-mono text-[11px] text-coral uppercase tracking-wide mb-1.5">
+            Danger zone
+          </label>
+          <p className="font-body text-[13px] text-inksoft mb-3">
+            Permanently delete your account and everything tied to it — your profile,
+            activities, circles you own, friendships, and availability. This can&apos;t
+            be undone.
+          </p>
+          <button
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+            className="font-display font-semibold text-sm px-5 py-2 rounded-full border border-coral text-coral hover:bg-coral/10 disabled:opacity-50"
+          >
+            {deleting ? "Deleting…" : "Delete my account"}
+          </button>
         </div>
       </div>
     </div>

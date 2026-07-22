@@ -389,21 +389,7 @@ export default function FeedPage() {
           </div>
         )}
 
-        <div className="flex gap-2 mb-5 flex-wrap">
-          {circles.map((c) => (
-            <div
-              key={c.id}
-              className="font-mono text-[11.5px] text-inksoft bg-white border border-border rounded-full px-3 py-1"
-            >
-              {c.name} · {c.memberIds.length}
-            </div>
-          ))}
-          <Link
-            href="/circles"
-            className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
-          >
-            + Manage Circles
-          </Link>
+        <div className="flex gap-2 mb-4 flex-wrap">
           <Link
             href="/friends"
             className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
@@ -422,6 +408,33 @@ export default function FeedPage() {
           >
             + Calendar
           </Link>
+        </div>
+
+        <div className="bg-white border border-border rounded-xl px-3.5 py-3 mb-5">
+          <div className="font-mono text-[10.5px] text-gray-400 uppercase tracking-wide mb-2">
+            Your circles
+          </div>
+          <div className="flex gap-2 flex-wrap items-center">
+            {circles.map((c) => (
+              <span
+                key={c.id}
+                className="font-mono text-[11.5px] text-inksoft bg-bg border border-border rounded-full px-3 py-1"
+              >
+                {c.name} · {c.memberIds.length}
+              </span>
+            ))}
+            {circles.length === 0 && (
+              <span className="font-body text-[12.5px] text-gray-400">
+                No circles yet.
+              </span>
+            )}
+            <Link
+              href="/circles"
+              className="font-mono text-[11.5px] text-indigo border border-indigo/40 rounded-full px-3 py-1"
+            >
+              + Manage circles
+            </Link>
+          </div>
         </div>
 
         {editing ? (

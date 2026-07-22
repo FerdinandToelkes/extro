@@ -16,12 +16,28 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPending, setConfirmPending] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
 
   const resetMessages = () => {
     setError("");
     setConfirmPending(false);
+    setResetSent(false);
+  };
+
+  const handleForgotPassword = async () => {
+    resetMessages();
+    if (!email.trim()) {
+      setError("Enter your email above first, then tap “Forgot password?”.");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo:
+        typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined,
+    });
+    if (error) setError(error.message);
+    else setResetSent(true);
   };
 
   const switchAuthAction = (a) => {
@@ -161,6 +177,20 @@ export default function LoginPage() {
                   : "Create Account"
                 : "Log In"}
             </button>
+            {authAction === "login" && (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="font-mono text-[11px] text-indigo text-left"
+              >
+                Forgot password?
+              </button>
+            )}
+            {resetSent && (
+              <p className="font-body text-sm text-sage">
+                If an account exists for {email}, a password-reset link is on its way — check your inbox.
+              </p>
+            )}
             {error && <p className="text-coral text-xs font-body">{error}</p>}
           </form>
         )}
