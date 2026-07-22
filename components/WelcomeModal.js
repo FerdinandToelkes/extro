@@ -26,7 +26,7 @@ const STEPS = [
   {
     emoji: "✋",
     title: "Respond & make a plan",
-    body: "Tap I'm in, Interested, or Maybe on anyone's post. Once a couple of people are in, a temporary activity chat opens so you can sort out the details — it clears when the activity ends.",
+    body: "Tap I'm in, Interested, or Mayhaps on anyone's post. Once a couple of people respond, a temporary activity chat opens so you can sort out the details — it clears when the activity ends.",
   },
 ];
 
