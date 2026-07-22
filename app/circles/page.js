@@ -12,6 +12,7 @@ import {
   createCircle,
   addCircleMember,
   removeCircleMember,
+  deleteCircle,
 } from "../../lib/queries";
 
 export default function CirclesPage() {
@@ -98,6 +99,14 @@ export default function CirclesPage() {
 
   const handleRemoveMember = (circleId, memberId) =>
     run(() => removeCircleMember(circleId, memberId));
+
+  const handleDeleteCircle = (circle) => {
+    if (!window.confirm(`Delete the circle "${circle.name}"? This can't be undone.`)) return;
+    return run(async () => {
+      if (expandedCircleId === circle.id) setExpandedCircleId(null);
+      await deleteCircle(circle.id);
+    });
+  };
 
   if (loading) return null;
 
@@ -241,6 +250,17 @@ export default function CirclesPage() {
                             </button>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {isOwner && (
+                      <div className="mt-3 pt-3 border-t border-dashed border-border">
+                        <button
+                          onClick={() => handleDeleteCircle(c)}
+                          className="font-mono text-[11px] text-coral border border-coral/40 rounded-full px-3 py-1 hover:bg-coral/10"
+                        >
+                          Delete circle
+                        </button>
                       </div>
                     )}
                   </div>
